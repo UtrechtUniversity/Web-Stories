@@ -1,0 +1,19 @@
+{
+    "start": {
+        "enabled": true,
+        "responses": [
+            {
+                "response": "You are Jamie, a unit from the latest generation CompanionBots&#174;. You were born 72 days ago on the production belt in the factory of The Companion Company in Shengzhou, China. You're 5.9 feet tall, you weigh 82KG and you're supposed to be 32 years old.",
+                "conditions": [],
+                "newChoices": ["c1"]
+            }
+        ],
+        "consequences": []
+    },
+    "c1": {
+        "enabled": true,
+        "choice": "Continue",
+        "responses": [],
+        "consequences": []
+    }
+}

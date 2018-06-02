@@ -1,0 +1,77 @@
+/* INTERACTIVE MENU */
+#menu_container {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 90%;
+    width: 90%;
+    max-width: 40rem;
+    max-height: 50rem;
+    margin: auto auto;
+    padding: 1.2rem;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 1px solid white;
+    opacity: 0;
+    transform: scale(0.7);
+    overflow: auto hidden;
+    transition: all 200ms ease-in-out;
+    -webkit-transition: all 200ms ease-in-out;
+    -moz-transition: all 200ms ease-in-out;
+    -o-transition: all 200ms ease-in-out;
+}
+
+#menu_container.animate {
+    transform: scale(1);
+    opacity: 1;
+}
+
+#menu_container.hide {
+    display: none;
+}
+
+#menu_container h3 {
+    font-weight: normal;
+    width: 100%;
+    position: relative;
+    top: -1.2rem;
+    left: -1.2rem;
+    margin: 0;
+    padding: 0.6rem 1.2rem 0.3rem 1.2rem;
+    color: black;
+    background-color: white;
+
+}
+
+#menu_header span {
+    position: relative;
+    float: right;
+    padding: 0.4em;
+}
+
+#menu_header span:first-child {
+    float: left;
+}
+
+#menu_options {
+    margin-top: 0.7em;
+    padding: 0;
+}
+
+#menu_options button {
+    border-left: 1px solid white;
+    border-bottom: 1px solid white;
+    border-right: 0px;
+    border-top: 0px;
+}
+
+#menu_feedback {
+    width: 100%;
+    margin-left: -1.2em;
+    margin-top: -0.4em;
+    padding: 0.8em 0 0.8em 0.8em;
+    box-sizing: border-box;
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expression Engine Template Generator</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="templates.css" title="stylesheet">
+  <script src="templates.js"></script>
+  <script src="../lib/jquery-3.3.1.min.js"></script>
+</head>
+
+<body style="margin-left: 1em">
+  <header>
+    <h1>Template Generator</h1>
+  </header>
+
+  <div id="container">
+    <div id="editor">
+      <h3>Main components</h3>
+      <div id="main"></div>
+
+      <h3>Conditions</h3>
+      <div id="conditions"></div>
+
+      <h3>Consequences</h3>
+      <div id="consequences"></div>
+
+      <div id="feedback"></div>
+
+      <form>
+        <fieldset>
+          <textarea id="txtarea" rows="30"></textarea>
+        </fieldset>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+        let eeTemplates = (function () {
+
+            let showFeedback = function (feedback) {
+                $("#feedback").text(feedback);
+                setTimeout(function () {
+                    $("#feedback").text("");
+                }, 3000);
+            };
+
+            let showAndCopy = function (content) {
+
+                $("#txtarea").text(content);
+                var copyTextarea = document.querySelector("#txtarea");
+                copyTextarea.select();
+
+                try {
+                    var successful = document.execCommand("copy");
+                    var msg = successful ? "Copied to clipboard" :
+                        "Error: copy to clipboard failed";
+                    showFeedback(msg);
+                } catch (err) {
+                    showFeedback("Unable to copy");
+                }
+            };
+
+            let generateButton = function (cat, template) {
+                // Create a button
+                $("#" + cat).append("<button id =\"" + template.id + "\">" +
+                    template.name + "</button>");
+                // Make click event
+                $("#" + template.id).click(function () {
+                    showAndCopy(template.content);
+                });
+            }
+
+            templates.main.forEach(function (template) {
+                generateButton("main", template);
+            });
+
+            templates.conditions.forEach(function (template) {
+                generateButton("conditions", template);
+            });
+
+            templates.consequences.forEach(function (template) {
+                generateButton("consequences", template);
+            });
+
+        })();
+    });
+</script>
+
+</body>
+</html>

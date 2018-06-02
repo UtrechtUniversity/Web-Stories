@@ -1,0 +1,38 @@
+{
+    "start": {
+        "enabled": true,
+        "responses": [
+            {
+                "response": "FirstTextThePlayerWillSee.",
+                "conditions": [],
+                "newChoices": ["c1"]
+            }
+        ],
+        "consequences": []
+    },
+    "c1": {
+        "enabled": true,
+        "choice": "Continue",
+        "responses": [
+            {
+                "response": "ResponseWhenCertainConditionsAreMet",
+                "conditions": [
+                    
+                ],
+                "newChoices": []
+            },
+            {
+                "response": "DefaultResponse",
+                "conditions": [],
+                "newChoices": []
+            }
+        ],
+        "consequences": [
+            {
+                "type": "increaseNpcComfort",
+                "npc": "npcID",
+                "amount": 5
+            }
+        ]
+    }
+}

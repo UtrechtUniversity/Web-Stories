@@ -1,0 +1,17 @@
+{
+    "audioFadeTime": 1000,
+    "fadeTime": 250,
+    "feedbackTime": 4000,
+    "debugStats": true,
+    "muteSound": false,
+    "enableInventory": true,
+    "devAutoStart": false,
+    "bgSize": "contain",
+    "startLocation": "locAptLivingRoom",
+    "storySettings": {
+        "magicSocks": false,
+        "sockPower": false
+    },
+    "preloadAudio": [
+    ]
+}

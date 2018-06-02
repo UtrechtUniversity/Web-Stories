@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nightswim - Untitled Story</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' filesystem 'unsafe-inline'; img-src 'self' data:;">
+  <meta name="description" content="description">
+  <meta name="keywords" content="keywords">
+  <meta name="author" content="author name">
+  <meta name="viewport" content="initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="style.css" title="stylesheet">
+  <link rel="stylesheet" type="text/css" href="menu.css" title="stylesheet">
+  <link rel="stylesheet" type="text/css" href="location.css" title="stylesheet">
+  <script src="lib/jquery-3.3.1.min.js"></script>
+  <script src="lib/howler.core.min.js"></script>
+  <script src="dist/nightswim-0.9.0.js"></script>
+</head>
+
+<body class="std">
+
+  <div id="bg_layer_top" class="std"></div>
+  <div id="bg_layer_bottom" class="std"></div>
+
+  <div id="menu_container" class="hide">
+    <h3 id="menu_title"></h3>
+    <div id="menu_feedback"></div>
+    <div id="menu_info"></div>
+    <ul id="menu_options"></ul>
+  </div>
+
+  <header>
+    <a href="#"><span id="inventory">Inventory</span></a>
+    <a href="#"><span id="muteButton">Mute sound</span></a>
+  </header>
+
+  <div id="container" class="std">
+    <div id="feedback"></div>
+    <h1 id="storyTitle">Story Title</h1>
+    <div id="text">
+      <p>This is an interactive story about things happening to people.</p>
+      <p>A modern web browser with Javascript enabled is required.</p>
+    </div>
+    <ul id="choices">
+      <li><button id="playSound" class="std">Turn sound off</button></li>
+      <li><button id="startButton" class="std">Let's go</button></li>
+    </ul>
+  </div>
+
+  <div id="debugstats">
+    <p id="err"></p>
+    Audio: <span id="soundInfo"></span><br>
+    Location: <span id="playerlocation"></span><br>
+    Prev: <span id="playerprevloc"></span><br>
+    Next: <span id="playernextloc"></span><br>
+    InScene: <span id="inScene"></span><br>
+    InObject: <span id="inObject"></span><br>
+    MenuActive: <span id="menu_active"></span><br>
+    MenuTracker: <ul id="menu_tracker"></ul>
+  </div>
+  
+</body>
+</html>

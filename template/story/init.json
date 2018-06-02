@@ -1,0 +1,15 @@
+{
+    "audioFadeTime": 1000,
+    "fadeTime": 250,
+    "feedbackTime": 4000,
+    "debugStats": false,
+    "muteSound": false,
+    "devAutoStart": false,
+    "enableInventory": true,
+    "bgSize": "cover",
+    "startLocation": "start",
+    "storySettings": {
+    },
+    "preloadAudio": [
+    ]
+}

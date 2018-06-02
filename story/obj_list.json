@@ -1,0 +1,170 @@
+[
+    {
+        "name": "tiny box",
+        "description": "A tiny box.",
+        "location": "shoebox",
+        "state": "closed",
+        "content": "There is candy inside.",
+        "interactions": [
+            {
+                "type": "open",
+                "activated": true,
+                "button": "Open tiny box",
+                "feedback": "",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "receive": [],
+        "singleUse": false
+    },
+    {
+        "name": "shoebox",
+        "description": "It's a box. For shoes.",
+        "location": "closet",
+        "state": "closed",
+        "content": "There are shoes inside. And a {{tiny box}}.",
+        "interactions": [
+            {
+                "type": "open",
+                "activated": true,
+                "button": "Open shoebox",
+                "feedback": "",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "receive": [],
+        "singleUse": false
+    },
+    {
+        "name": "magic socks",
+        "description": "Pretty amazing socks.",
+        "location": "locAptSecretRoom",
+        "state": "default",
+        "content": "",
+        "interactions": [
+            {
+                "type": "take",
+                "activated": true,
+                "button": "Take socks",
+                "feedback": "You took the magic socks. With great power come great socks.",
+                "conditions": [],
+                "consequences": [
+                    {
+                        "type": "changeStorySetting",
+                        "storySetting": "magicSocks",
+                        "value": false
+                    },
+                    {
+                        "type": "changeStorySetting",
+                        "storySetting": "sockPower",
+                        "value": true
+                    },
+                    {
+                        "type": "refresh"
+                    }
+                ]
+            }
+        ],
+        "receive": [],
+        "singleUse": false
+    },
+    {
+        "name": "closet",
+        "description": "Just an ordinary closet.",
+        "location": "locAptLivingRoom",
+        "state": "closed",
+        "content": "[[Go through passageway->locAptSecretRoom]]Just an ordinary closet, with a {{shoebox}}. {{There's a gun inside. ->gun}} And there seems to be a passageway to...",
+        "interactions": [
+            {
+                "type": "open",
+                "activated": true,
+                "button": "Open closet",
+                "feedback": "",
+                "conditions": [],
+                "consequences": []
+            },
+            {
+                "type": "lick",
+                "activated": true,
+                "button": "Lick closet",
+                "feedback": "",
+                "conditions": [
+                    {
+                        "type": "location",
+                        "obj": "closet",
+                        "value": "locForest",
+                        "failMsg": "I'm not putting my lips on that."
+                    }
+                ],
+                "consequences": []
+            }
+        ],
+        "receive": [
+            {
+                "from": "gun",
+                "feedback": "The closet got shot!",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "singleUse": false
+    },
+    {
+        "name": "gun",
+        "description": "Pretty nice gun.",
+        "location": "closet",
+        "state": "default",
+        "content": "",
+        "interactions": [
+            {
+                "type": "take",
+                "activated": true,
+                "button": "Take gun",
+                "feedback": "You took the gun. Be careful with it...",
+                "conditions": [],
+                "consequences": []
+            },
+            {
+                "type": "use on",
+                "activated": true,
+                "button": "Use gun on...",
+                "feedback": "",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "receive": [],
+        "singleUse": false
+    },
+    {
+        "name": "key",
+        "description": "Unlocks something...",
+        "location": "locAptLivingRoom",
+        "state": "default",
+        "content": "",
+        "interactions": [
+            {
+                "type": "take",
+                "activated": true,
+                "button": "Take key",
+                "feedback": "Key taken.",
+                "conditions": [],
+                "consequences": [
+                    {
+                        "type": "changeLocAccess",
+                        "loc": "locAptSecretRoom",
+                        "accessMsg": "unlocked"
+                    },
+                    {
+                        "type": "fadeOut",
+                        "id": "keyText"
+                    }
+                ]
+            }
+        ],
+        "receive": [],
+        "singleUse": false
+    }
+]

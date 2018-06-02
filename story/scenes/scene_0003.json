@@ -1,0 +1,30 @@
+{
+    "start": {
+        "enabled": true,
+        "responses": [
+            {
+                "response": "You go for a walk. She smiles, and shows you around.",
+                "conditions": [],
+                "newChoices": ["c1"]
+            }
+        ],
+        "consequences": []
+    },
+    "c1": {
+        "enabled": true,
+        "choice": "Continue",
+        "responses": [],
+        "consequences": [
+            {
+                "type": "increaseNpcComfort",
+                "npc": "Rihanna",
+                "amount": 10
+            },
+            {
+                "type": "changeStorySetting",
+                "storySetting": "magicSocks",
+                "value": true
+            }
+        ]
+    }
+}

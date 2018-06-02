@@ -1,0 +1,21 @@
+[
+    {
+        "name": "Rihanna",
+        "description": "Rihanna is 5.709 feet tall, has long brown hair and bright green eyes that remind you of the mother you supposedly had. Your body language detector reports that she is slightly nervous, as her heart rate is little above average, the muscles in her cheeks show signs of tension as well as her shoulders, she avoids eye contact for longer than a second and she moved her weight balance from her left to her right leg and back two times. The distance between the two of you is 4.419 feet.",
+        "location": "locAptLivingRoom",
+        "state": "normal",
+        "comfortLevel": 0,
+        "sceneQueue": ["scene_0002"],
+        "interactions": [
+            {
+                "type": "talk",
+                "activated": true,
+                "button": "Talk to Rihanna",
+                "feedback": "",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "receive": []
+    }
+]

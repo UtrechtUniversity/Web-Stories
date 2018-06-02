@@ -1,0 +1,188 @@
+[
+    {
+        "locID": "locAptSecretRoom",
+        "name": "Apartment - Secret Room",
+        "accessMsg": "The door at the end of the passageway is locked..",
+        "locImg": "no_bg",
+        "locSnd": "no_sound",
+        "cutscenes": {},
+        "scenes": {
+            "scene_0003": false
+        },
+        "content": [
+            {
+                "sectionHTML": "<p>Ooohhh, a secret room!</p><p>All the things that could be in here...</p>((<p>Like this pair of {{!magic socks}}!</p>))[[Return to living room->locAptLivingRoom]]",
+                "conditions": [
+                    {
+                        "type": "storySetting",
+                        "storySetting": "magicSocks",
+                        "value": true
+                    }
+                ],
+                "consequences": []
+            }
+        ],
+        "styling": {
+            "bgClass": "secretroomBg",
+            "buttonClass": "secretroomButton",
+            "containerClass": "secretroomContainer"
+        }
+    },
+    {
+        "locID": "locAptLivingRoom",
+        "name": "Apartment - Living Room",
+        "accessMsg": "unlocked",
+        "locImg": "no_bg",
+        "locSnd": "no_sound",
+        "cutscenes": {
+            "anim_0001": false
+        },
+        "scenes": {
+            "scene_0001": true
+        },
+        "content": [
+            {
+                "sectionHTML": "<p>You're in an apartment. It's a beautiful apartment.</p>[[To the streets->locStreets]]",
+                "conditions": [],
+                "consequences": [],
+                "delay": 0
+            },
+            {
+                "sectionHTML": "<p>There is a {{closet}}.(( <span id=\"keyText\">And there is a {{!key}} on the table.</span>))</p>",
+                "conditions": [
+                    {
+                        "type": "location",
+                        "obj": "key",
+                        "value": "locAptLivingRoom"
+                    }
+                ],
+                "consequences": []
+            },
+            {
+                "sectionHTML": "<p>{{Rihanna}} is waiting for you.</p>",
+                "conditions": [
+                    {
+                        "type": "location",
+                        "obj": "Rihanna",
+                        "value": "locAptLivingRoom",
+                        "failMsg": ""
+                    }
+                ],
+                "consequences": [],
+                "delay": 0
+            },
+            {
+                "sectionHTML": "<p>This part fades in later.</p>",
+                "conditions": [],
+                "consequences": [],
+                "delay": 2000
+            }
+        ],
+        "styling": {
+            "containerClass": "std",
+            "buttonClass": "std",
+            "bgClass": "std"
+        }
+    },
+    {
+        "locID": "locStreets",
+        "name": "Streets",
+        "accessMsg": "unlocked",
+        "locImg": "no_bg",
+        "locSnd": "no_sound",
+        "cutscenes": {},
+        "scenes": {},
+        "content": [
+            {
+                "sectionHTML": "<p>The streets.</p><p>Connected to other streets.</p><p>I am surrounded by concrete.</p><p>[[To the forest!->locForest]][[Enter your apartment->locAptLivingRoom]]</a></p>",
+                "conditions": [],
+                "consequences": []
+            },
+            {
+                "sectionHTML": "<p>{{Rihanna}} wants to ({take a walk}) with you.</p>",
+                "fallback": "<p>{{Rihanna}} doesn't feel like going for a walk with you.",
+                "conditions": [
+                    {
+                        "type": "npcComfortLevel",
+                        "npc": "Rihanna",
+                        "value": 5
+                    }
+                ],
+                "consequences": [
+                    {
+                        "type": "triggerScene",
+                        "scene": "scene_0003"
+                    },
+                    {
+                        "type": "removeSection",
+                        "loc": "locStreets",
+                        "section": 1
+                    }
+                ]
+            }
+        ],
+        "styling": {
+            "containerClass": "std",
+            "buttonClass": "std",
+            "bgClass": "std"
+        }
+    },
+    {
+        "locID": "locForest",
+        "name": "Forest",
+        "accessMsg": "unlocked",
+        "locImg": "no_bg",
+        "locSnd": "no_sound",
+        "cutscenes": {},
+        "scenes": {},
+        "content": [
+            {
+                "sectionHTML": "<p>The forest. Yes.</p><p>Trees, indeed.</p><p>So many trees.</p>",
+                "conditions": [],
+                "consequences": []
+            },
+            {
+                "sectionHTML": "<p>You can climb all the way up on the trees with your beautiful magic socks.</p>[[Climb up->locTrees]]",
+                "conditions": [
+                    {
+                        "type": "storySetting",
+                        "storySetting": "sockPower",
+                        "value": true
+                    }
+                ],
+                "consequences": []
+            },
+            {
+                "sectionHTML": "[[Enter your apartment->locAptLivingRoom]]",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "styling": {
+            "bgClass": "",
+            "buttonClass": "std",
+            "containerClass": "std"
+        }
+    },
+    {
+        "locID": "locTrees",
+        "name": "Trees",
+        "accessMsg": "unlocked",
+        "locImg": "no_bg",
+        "locSnd": "no_sound",
+        "cutscenes": {},
+        "scenes": {},
+        "content": [
+            {
+                "sectionHTML": "<p>The view is amazing. You never want to leave. Ever.</p><p>(This is the end of the demo)</p>[[Go back down->locForest]]",
+                "conditions": [],
+                "consequences": []
+            }
+        ],
+        "styling": {
+            "containerClass": "",
+            "buttonClass": "",
+            "bgClass": ""
+        }
+    }
+]

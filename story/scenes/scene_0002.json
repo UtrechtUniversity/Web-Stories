@@ -1,0 +1,45 @@
+{
+    "start": {
+        "enabled": true,
+        "responses": [
+            {
+                "response": "'You just arrived and you already stole my keys. O well, I suppose you're gonna give 'm back... Anyway, welcome in your new home!'",
+                "conditions": [
+                    {
+                        "type": "inInventory",
+                        "obj": "key"
+                    }
+                ],
+                "newChoices": [
+                    "c0"
+                ]
+            },
+            {
+                "response": "You open your eyes. You are standing in a large living room dimly lit by orange light emitted by glowing circles in the ceiling. The window to the balcony on your left shows a view on the city you know everything of. In front of you stands the well-dressed woman you met in the shop. Her name is Rihanna.",
+                "conditions": [],
+                "newChoices": [
+                    "c0"
+                ]
+            }
+        ],
+        "consequences": []
+    },
+    "c0": {
+        "enabled": true,
+        "choice": "Continue",
+        "responses": [],
+        "consequences": [
+            {
+                "type": "changeObjLoc",
+                "obj": "Rihanna",
+                "value": "locStreets"
+            },
+            {
+                "type": "increaseNpcComfort",
+                "npc": "Rihanna",
+                "amount": 10,
+                "feedback": "Rihanna now feels slightly more comfortable around you."
+            }
+        ]
+    }
+}

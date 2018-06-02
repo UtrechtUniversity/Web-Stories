@@ -1,0 +1,223 @@
+html {
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-size: 1em;
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+}
+
+body.std {
+    background-color: black;
+}
+
+#bg_layer_top, #bg_layer_bottom {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    transition: opacity 1s ease-in-out;
+    -webkit-transition: opacity 1s ease-in-out;
+    -moz-transition: opacity 1s ease-in-out;
+    -o-transition: opacity 1s ease-in-out;
+}
+
+#bg_layer_top {
+    z-index: -5;
+}
+
+#bg_layer_top.std {
+    background-color: black;
+}
+
+#bg_layer_bottom {
+    z-index: -10;
+}
+
+#bg_layer_bottom.std {
+    background-color: black;
+}
+
+header {
+    font-size: 1.2rem;
+    position: absolute;
+    z-index: 8;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.3em;
+    box-sizing: border-box;
+    text-align: right;
+    opacity: 0;
+    transition: opacity 500ms ease-in-out;
+    -webkit-transition: opacity 500ms ease-in-out;
+    -moz-transition: opacity 500ms ease-in-out;
+    -o-transition: opacity 500ms ease-in-out;
+}
+
+header a:link, header a:visited {
+    background-color: black;
+    color: grey;
+}
+
+#container {
+    font-size: 1.1rem;
+    max-width: 40rem;
+    height: 80vh;
+    margin: 0 auto;
+    padding: 0.5em;
+    padding-top: 12vh;
+}
+
+#container.std {
+    color: white;
+}
+
+button {
+    font-size: 1em;
+    left: 20px;
+    padding: 0.6em;
+    transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
+    -webkit-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
+    -moz-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
+    -o-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
+}
+
+button.std {
+    color: white;
+    background: none;
+    border: 1px solid white;
+}
+
+button.std:hover {
+    color: rgb(0, 0, 0);
+    background-color: white;
+}
+
+#feedback, #menu_feedback {
+    position: absolute;
+    z-index: 20;
+    background-color: rgb(0, 68, 131);
+    color: white;
+    opacity: 0;
+    transition: opacity 500ms ease-in-out;
+    -webkit-transition: opacity 500ms ease-in-out;
+    -moz-transition: opacity 500ms ease-in-out;
+    -o-transition: opacity 500ms ease-in-out;
+}
+
+#feedback {
+    top: 8vh;
+    max-width: 40rem;
+    padding: 0.2em 0.5em 0.2em 0.5em;
+}
+
+#debugstats {
+    font-size: 0.85em;
+    position: absolute;
+    z-index: -2;
+    left: 10px;
+    top: 30px;
+    width: 500px;
+    margin-left: 10px;
+    overflow: hidden;
+    color: #bbb;
+    display: none;
+}
+
+#debugstats ul {
+    margin: 0;
+}
+
+#debugstats li {
+    margin-left: 1em;
+}
+
+#err {
+    background-color: red;
+}
+
+
+/* LINKS & BUTTONS */
+a:link, a:visited {
+    padding: 0 0.2em;
+    text-decoration: none;
+    border-width: 0;
+    color: black;
+    background-color: white;
+    transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+    -webkit-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+    -moz-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+    -o-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+}
+a:hover { 
+    color: white;
+    background-color: #0093c4;
+}
+
+a:active {
+    color: black;
+}
+
+a.useOn:link, a.useOn:visited {
+    color: white;
+    background-color: #01a767;
+}
+
+#choices li, #menu_options li {
+    margin-bottom: 0.3em;
+}
+
+
+/* GENERAL STYLING */
+h1 { margin: 0 }
+
+ul, li{
+    margin-left: 0;
+    padding-left: 0;
+    list-style-type: none;
+}
+
+.blur {
+    filter: blur(2px);
+}
+
+.show {
+    opacity: 1;
+}
+
+.hide {
+    display: none;
+}
+
+.cutscene {
+    display: inline;
+}
+
+.waitForFade {
+    visibility: visible;
+    opacity: 0;
+    transition: opacity 500ms ease-in-out;
+    -webkit-transition: opacity 500ms ease-in-out;
+    -moz-transition: opacity 500ms ease-in-out;
+    -o-transition: opacity 500ms ease-in-out;
+}
+
+
+/* ADJUSTMENTS FOR LARGER SCREENS */
+@media screen and (min-width: 900px) {
+
+    #container {
+        font-size: 1.3rem;
+    }
+
+    #menu_container {
+        font-size: 1.2em;
+        height: 80%;
+    }
+
+}

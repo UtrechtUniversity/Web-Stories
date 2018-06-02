@@ -1,0 +1,31 @@
+/* CUSTOM CLASSES FOR LOCATIONS.JS
+   Be careful not to choose names
+   that are already in use by
+   style.css and menu.css         */
+
+.customBg {
+    background-color: pink;
+}
+
+#container.custom {
+    color: black;
+}
+
+#container.custom a:link,
+#container.custom a:visited {
+    
+}
+#container.custom a:hover {
+    
+}
+
+button.custom {
+    color: black;
+    background: none;
+    border: 1px solid black;
+}
+
+button.custom:hover {
+    color: blue;
+    border: 1px solid blue;
+}

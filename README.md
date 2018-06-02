@@ -1,9 +1,7 @@
 # Nightswim
 
 Nightswim is an interactive storytelling engine for creating rich audiovisual
-interactive stories and adventure games. It's made in JS, HTML and CSS. Nightswim 
-consists of two parts: the engine and the editor. This is the engine. The editor
-is a seperate project.
+interactive stories and adventure games.
 
 ## Features:
 - Create characters and objects and have players interact with them

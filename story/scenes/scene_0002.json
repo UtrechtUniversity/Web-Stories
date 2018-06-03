@@ -15,7 +15,7 @@
                 ]
             },
             {
-                "response": "You open your eyes. You are standing in a large living room dimly lit by orange light emitted by glowing circles in the ceiling. The window to the balcony on your left shows a view on the city you know everything of. In front of you stands the well-dressed woman you met in the shop. Her name is Rihanna.",
+                "response": "<p>You open your eyes. You are standing in a large living room dimly lit by orange light emitted by glowing circles in the ceiling. The window to your right shows a view on the city you know everything of. In front of you stands the well-dressed woman you met in the shop. Her name is Rihanna.</p><p>'Welcome in your new home!' she says, full of excitement but slightly awkward. You smile and thank her.",
                 "conditions": [],
                 "newChoices": [
                     "c0"

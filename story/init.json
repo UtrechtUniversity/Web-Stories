@@ -6,7 +6,7 @@
     "muteSound": false,
     "enableInventory": true,
     "devAutoStart": false,
-    "bgSize": "contain",
+    "bgSize": "cover",
     "startLocation": "locAptLivingRoom",
     "storySettings": {
         "magicSocks": false,

@@ -6,9 +6,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-
     width: 90%;
     max-width: 40rem;
+	height: 90%;
     max-height: 50rem;
     margin: auto auto;
     padding: 1.2rem;

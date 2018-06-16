@@ -27,6 +27,7 @@ let menuTitle = "none";
 let menuTracker = [];
 let menuTxtQueue = [];
 let menuButtonQueue = [];
+// menuLock is TRUE whenever the menu is animating in or out
 let menuLock = false;
 let useOnModeActive = false;
 let useOnSource;
@@ -273,6 +274,7 @@ const refreshMenu = function (objID) {
 const showMenu = function (objID) {
 
     menuActive = true;
+    menuLock = true;
     menuPage = "Interaction Menu";
     clearFeedback(false, true);
 
@@ -283,16 +285,13 @@ const showMenu = function (objID) {
 
     // Timeout is necessary or else the animation won't work. No clue why.
     setTimeout(function () {
-
         $("#menu_container").addClass("animate");
         $("#container").addClass("blur");
-
-    }, 15);
+    }, 50);
 
     setTimeout(function () {
-
         document.addEventListener("mouseup", outsideClickListener);
-
+        menuLock = false;
     }, 500);
 
 };
@@ -303,16 +302,18 @@ const hideMenu = function () {
 
     menuLock = true;
     document.removeEventListener("mouseup", outsideClickListener);
-
     $("#menu_container").removeClass("animate");
     $("#container").removeClass("blur");
 
     setTimeout(function () {
-
-        $("#menu_container").addClass("hide");
         menuLock = false;
-
-    }, 300);
+        /* Menu might have been opened again during timeout, for example
+        when player clicks inventory button when the menu is open */
+        if (!menuActive) {
+            $("#menu_container").addClass("hide");
+        }
+    // 200ms is the delay time for the animations in the stylesheet
+    }, 200);
 
     // Automatically close everything that was opened
     // on deeper levels than the first
@@ -377,14 +378,18 @@ const openMenu = function (objID) {
     let objRef = objInfo.ref;
 
     if (menuLock) {
-        delay = fadeTime;
+        delay = 250;
     } else {
         delay = 0;
     }
 
     /* This timeout is to prevent the menu from simultaneously
      opening and closing when the player clicks on something outside
-    of the menu while the menu is open */
+    of the menu while the menu is open. The delay time of 250ms is slightly
+    longer than the duration of the animation (200ms), which is used for
+    delaying the hiding of the menu is hideMenu(), so this part will
+    always run after a possible closing action of the menu has been
+    completed. */
     setTimeout(function () {
 
         // Temporarily change location
@@ -422,13 +427,17 @@ const openInventory = function () {
     let objRef = ObjList.get(objID);
 
     if (menuLock) {
-        delay = fadeTime;
+        delay = 250;
     } else {
         delay = 0;
     }
     /* This timeout is to prevent the menu from simultaneously
-    opening and closing when the player clicks on something outside
-    of the menu while the menu is open */
+     opening and closing when the player clicks on something outside
+    of the menu while the menu is open. The delay time of 250ms is slightly
+    longer than the duration of the animation (200ms), which is used for
+    delaying the hiding of the menu is hideMenu(), so this part will
+    always run after a possible closing action of the menu has been
+    completed. */
     setTimeout(function () {
 
         // Temporarily change location

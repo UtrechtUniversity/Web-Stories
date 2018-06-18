@@ -138,7 +138,7 @@ class Npc extends SuperObj {
                 sceneQueue.push(scene);
                 return true;
             }).fail(function() {
-                logError("Error: constructor.js/addScene: " +
+                logError("constructor.js/addScene: " +
                 "scenefile not found");
                 return false;
             });

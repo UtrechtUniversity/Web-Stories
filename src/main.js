@@ -109,7 +109,7 @@ const updateDebugStats = function () {
 };
 
 const logError = function (msg) {
-    console.log(msg);
+    console.log("ERROR: " + msg);
     $("#err").text("Program error - see console for details");
 };
 
@@ -117,7 +117,7 @@ const playCutscene = function (url) {
     $.getJSON(url, function (eventArray) {
         startCutscene(eventArray);
     }).fail(function () {
-        logError("Error: main.js/playCutscene: scenefile not found");
+        logError("main.js/playCutscene: scenefile not found");
     });
 };
 
@@ -125,7 +125,7 @@ const loadScene = function (url) {
     $.getJSON(url, function (choiceList) {
         startScene(choiceList);
     }).fail(function () {
-        logError("Error: main.js/loadScene: scenefile not found");
+        logError("main.js/loadScene: scenefile not found");
     });
 };
 
@@ -344,6 +344,8 @@ const initStory = function () {
         });
         ObjListLoaded = true;
         console.log("Obj's loaded");
+    }).fail(function () {
+        logError("Obj's not loaded. This is probably caused by a syntax-error in obj_list.json");
     });
 
     // Instantiate all Npc's
@@ -362,6 +364,8 @@ const initStory = function () {
         });
         NpcListLoaded = true;
         console.log("Npc's loaded");
+    }).fail(function () {
+        logError("Npc's not loaded. This is probably caused by a syntax-error in npc_list.json");
     });
 
     // Instantiate all locations
@@ -393,12 +397,16 @@ const initStory = function () {
                 console.log("Not yet ready. ObjListLoaded = " + ObjListLoaded + ", NpcListLoaded = " + NpcListLoaded);
             }
         }, 100);
+    }).fail(function () {
+        logError("Locations not loaded. This is probably caused by a syntax-error in locations.json");
     });
 
     // Taking settings from init.js
     $.getJSON("story/init.json", function (initObj) {
         init = initObj;
         initLoaded = true;
+    }).fail(function () {
+        logError("Init settings not loaded. This is probably caused by a syntax-error in init.json");
     });
 
 };
@@ -996,7 +1004,7 @@ const change = function (changeArray) {
             feedback[i] = changeObj.feedback;
             i += 1;
         } else if (!success) {
-            logError("Error: consequence failed: " + changeObj.type);
+            logError("consequence failed: " + changeObj.type);
         }
     });
 

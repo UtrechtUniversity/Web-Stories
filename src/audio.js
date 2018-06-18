@@ -1,5 +1,5 @@
 import {replaceById} from "./display.js";
-import {logError, updateDebugStats} from "./main.js";
+import {updateDebugStats} from "./main.js";
 import {LocationList} from "./classes.js";
 
 /*

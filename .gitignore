@@ -5,3 +5,4 @@ index_online.html
 .jshintrc
 package-lock.json
 webpack.config.js
+dist

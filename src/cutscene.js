@@ -39,6 +39,7 @@ const triggerEvent = function (event, eventArray) {
     // This function runs for every event in a scene
 
     let id = "event_" + eventArray.indexOf(event);
+    let totalDuration = event.duration + event.inAnim;
 
     // 1. Play sound if specified
     if (event.playSoundfile !== "no_sound") {
@@ -48,41 +49,42 @@ const triggerEvent = function (event, eventArray) {
     // 2. Either add or replace text
     if (event.type === "add") {
         // Add
-        if (event.inAnim > 0) {
+        if (event.inAnim >= 0) {
             // Fade in
-
             $("<div id=\"" + id +
             "\" class=\"cutscene\">" +
             event.sectionHTML + "</div>").appendTo("#text").hide();
 
             $("#" + id).fadeIn(event.inAnim);
-
-
-        } else {
-            // Instant pop-in
-            $("#text").append("<div id=\"" + id + "\" class=\"cutscene\">" + event.sectionHTML +
-            "</div>");
         }
-
     } else {
         // Replace
+        let replaceWithHTML = "<div id=\"" + id +
+        "\" class=\"cutscene\">" +
+        event.sectionHTML + "</div>";
+
         if (event.inAnim > 0) {
             // Fade in, replaceById will handle this for us
-            replaceById("text", event.sectionHTML, event.inAnim);
+            replaceById("text", replaceWithHTML, event.inAnim);
+
+            /* We add the inAnim duration a second time to the total
+            duration,because with a replace this duration is used for a fadeOut
+            AND fadeIN, which are done in replaceById. */
+            totalDuration += event.inAnim;
         } else {
             // Instant pop-in
-            $("#text").html(event.sectionHTML);
+            $("#text").html(replaceWithHTML);
         }
     }
 
     setTimeout(function () {
         /* When it ends:
-        1. Check if it needs to disappear or fade out
-            or stay onscreen (persist) */
+        1. Check if it needs to disappear (outAnim value of 0)
+        or fade out (outAnim value > 0) or stay on screen (value -1) */
 
         if (event.outAnim > 0) {
+            console.log("start fading out " + id + " right meow!");
             $("#" + id).fadeOut(event.outAnim);
-
         } else if (event.outAnim === 0) {
             // Just get rid of it
             $("#" + id).remove();
@@ -109,9 +111,9 @@ const triggerEvent = function (event, eventArray) {
                     enterLocation(player.locationNext);
                 }
             }
-        }, fadeTime * 2);
+        }, event.outAnim);
 
-    }, event.duration);
+    }, totalDuration);
 };
 
 export default "loaded";

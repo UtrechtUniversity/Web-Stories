@@ -3,7 +3,7 @@
         "sectionHTML": "This text will appear. ",
         "type": "add",
         "duration": 1000,
-        "inAnim": 500,
+        "inAnim": 1000,
         "outAnim": -1,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
@@ -11,18 +11,18 @@
     {
         "sectionHTML": "This text will appear too, but it will also disappear. ",
         "type": "add",
-        "duration": 3000,
-        "inAnim": 500,
-        "outAnim": 500,
+        "duration": 1000,
+        "inAnim": 1000,
+        "outAnim": 1000,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
     },
     {
         "sectionHTML": "Another one.",
-        "type": "add",
-        "duration": 1000,
-        "inAnim": 500,
-        "outAnim": -1,
+        "type": "replace",
+        "duration": 0,
+        "inAnim": 1000,
+        "outAnim": 10000,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
     }

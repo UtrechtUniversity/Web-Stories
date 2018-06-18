@@ -42,20 +42,16 @@ const fadeIn = function (id, thisFadeTime) {
     if (thisFadeTime === 0 || thisFadeTime === undefined) {
         thisFadeTime = fadeTime;
     }
-
     let idTag = "#" + id;
-    $(idTag).fadeTo(fadeTime, 1);
-    //document.getElementById(id).style.opacity = 1;
+    $(idTag).fadeTo(thisFadeTime, 1);
 };
 
 const fadeOut = function (id, thisFadeTime) {
     if (thisFadeTime === 0 || thisFadeTime === undefined) {
         thisFadeTime = fadeTime;
     }
-
     let idTag = "#" + id;
     $(idTag).fadeTo(thisFadeTime, 0);
-    //document.getElementById(id).style.opacity = 0;
 };
 
 // ========================= GENERAL ========================= \\

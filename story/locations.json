@@ -38,7 +38,7 @@
             "anim_0001": false
         },
         "scenes": {
-            "scene_0001": true
+            "scene_0001": false
         },
         "content": [
             {
@@ -94,13 +94,13 @@
         "scenes": {},
         "content": [
             {
-                "sectionHTML": "<p>The streets.</p><p>Connected to other streets.</p><p>I am surrounded by concrete.</p><p>[[To the forest!->locForest]][[Enter your apartment->locAptLivingRoom]]</a></p>",
+                "sectionHTML": "<p>The streets.</p><p>You are surrounded by concrete.</p>[[To the forest!->locForest]][[Enter your apartment->locAptLivingRoom]]",
                 "conditions": [],
                 "consequences": []
             },
             {
                 "sectionHTML": "<p>Rihanna wants to ({take a walk}) with you.</p>",
-                "fallback": "<p>Rihanna doesn't feel like going for a walk with you.",
+                "fallback": "<p>Rihanna doesn't feel like going for a walk with you.</p>",
                 "conditions": [
                     {
                         "type": "npcComfortLevel",

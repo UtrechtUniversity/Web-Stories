@@ -45,7 +45,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "0.9.0";
+const VERSION = "0.9.1";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -531,7 +531,7 @@ const directAction = function (obj) {
     }
 };
 
-const checkConditions = function (condList, displayFeedback) {
+const checkConditions = function (condList, displayFeedback = true) {
     /* This function handles all conditions.
     condList is an array containing condObj's.
     A condObj consists of condObj.type and condObj.value,

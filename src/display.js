@@ -1,5 +1,5 @@
 import {Location, LocationList} from "./classes.js";
-import {isMenuActive} from "./menu.js";
+import {deactivateUseOnMode, isMenuActive} from "./menu.js";
 
 let bgSize = "contain";
 let currentBg = "no_bg";
@@ -239,7 +239,7 @@ const setBgSize = function (newSize) {
     bgSize = newSize;
 };
 
-const showFeedback = function (feedback, persist = false) {
+const showFeedback = function (feedback, persist = false, useOnMode = false) {
 
     let id = "feedback";
     let delay = 0;
@@ -273,6 +273,12 @@ const showFeedback = function (feedback, persist = false) {
                 // Another timeout, to wait for the fade out to finish
                 replaceById(id, feedback, 0);
                 document.getElementById(id).style.opacity = 1;
+
+                if (useOnMode) {
+                    $("#cancelUseOn").one("click", function () {
+                        deactivateUseOnMode(true);
+                    });
+                }
 
                 if (!persist) {
                     setTimeout(function () {

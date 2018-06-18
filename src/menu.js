@@ -361,14 +361,19 @@ const useOnMode = function (source) {
 
     // useOnMode will always be triggered from the interaction menu
     hideMenu();
-    showFeedback("Use " + useOnSource + " on:", true);
+    showFeedback("<a href=\"#\" id=\"cancelUseOn\">cancel</a> Use " + useOnSource + " on:", true, true);
 
 };
 
-const deactivateUseOnMode = function () {
-    useOnModeActive = false;
-    clearFeedback(true, true);
-    showFeedback("'Use on' cancelled");
+const deactivateUseOnMode = function (refresh = false) {
+    if (useOnModeActive) {
+        useOnModeActive = false;
+        clearFeedback(true, true);
+        showFeedback("'Use on' cancelled");
+        if (refresh) {
+            refreshLocation();
+        }
+    }
 };
 
 const openMenu = function (objID) {
@@ -519,49 +524,53 @@ const createButtons = function () {
         }
 
         if (buttonTxt !== "inline_button") {
-
+            // Regular menu bottons
             buttonTxt = capitalizeFirstLetter(buttonTxt);
 
             $("#" + choiceDiv).append("<li><button id=\"" + thisID + "\" class=\"" + btnClass + "\">" +
                 buttonTxt + "</button></li>");
 
-        }
-
-        if (useOnModeActive) {
-            type = "useOn";
+        } else {
+            // Inline links
+            if (
+                useOnModeActive &&
+                (type === "directAction" || type === "openMenu")
+            ) {
+                /* useOnMode only works on inline links, and only when these
+                inline links are objects, which is the case when clicking them
+                either performs a directAction or openMenu */
+                type = "useOn";
+            }
         }
 
         if (type === "changeLoc") {
-
             $("#" + thisID).click(function () {
+                deactivateUseOnMode();
                 enterLocation(objID);
             });
-
         } else if (type === "advanceScene") {
-
             $("#" + thisID).one("click", function () {
+                deactivateUseOnMode();
                 advanceScene(objID);
             });
-
         } else if (type === "hideMenu") {
-
-            $("#" + thisID).one("click", hideMenu);
-
+            $("#" + thisID).one("click", function () {
+                deactivateUseOnMode();
+                hideMenu();
+            });
         } else if (type === "openMenu") {
-
             $("#" + thisID).click(function () {
+                deactivateUseOnMode();
                 openMenu(objID);
             });
-
         } else if (type === "openInventory") {
-
             $("#" + thisID).one("click", function () {
+                deactivateUseOnMode();
                 openInventory();
             });
-
         } else if (type === "interact") {
-
             $("#" + thisID).click(function () {
+                deactivateUseOnMode();
                 let objRef = ObjList.get(objID);
 
                 if (objRef === undefined) {
@@ -572,28 +581,24 @@ const createButtons = function () {
                     objRef.interact(interaction, false);
                 }
             });
-
         } else if (type === "directAction") {
-
             $("#" + thisID).click(function () {
+                deactivateUseOnMode();
                 directAction(objID);
             });
-
         } else if (type === "directChange") {
-
             $("#" + thisID).click(function () {
                 /* directChange comes from locationParse. objID contains
                 a reference to the changeArray instead of the usual objID...*/
+                deactivateUseOnMode();
                 change(objID);
             });
-
         } else if (type === "refreshLoc") {
-
             $("#" + thisID).one("click", function () {
+                deactivateUseOnMode();
                 refreshLocation();
             });
         } else if (type === "useOn") {
-
             $("#" + thisID).one("click", function () {
                 let objRef = ObjList.get(objID);
 
@@ -625,6 +630,7 @@ export {
     addToMenuTextQueue,
     addToMenu,
     createButtons,
+    deactivateUseOnMode,
     openInventory,
     openMenu,
     refreshMenu,

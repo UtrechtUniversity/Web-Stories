@@ -310,10 +310,30 @@ const clearFeedback = function (clearMain, clearMenu) {
 const compositFeedback = function (feedback) {
     // This function runs when we receive an array with multiple feedback-items
     let allFeedback = "";
+    let anyFeedback = false;
+
     /* Add all feedback to one big string
     and add <br> after each except the last one */
-    allFeedback = feedback.join("<br>");
-    showFeedback(allFeedback);
+    if (feedback.length > 0) {
+        let i = 0;
+        let failMsg;
+        while (i < feedback.length) {
+            failMsg = feedback[i];
+            if (failMsg !== "no_msg") {
+                anyFeedback = true;
+                allFeedback += failMsg;
+                if (i < (feedback.length - 1)) {
+                    allFeedback += "<br>";
+                }
+            }
+            i++;
+        }
+    }
+
+    if (anyFeedback) {
+        showFeedback(allFeedback);
+    }
+
 };
 
 const setFeedbackTime = function (newFeedbackTime) {

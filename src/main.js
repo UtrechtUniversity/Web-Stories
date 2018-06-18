@@ -552,7 +552,6 @@ const checkConditions = function (condList, displayFeedback = true) {
     let type;
     let value;
     let loc;
-    let npc;
     let obj;
     let objRef;
 
@@ -560,6 +559,17 @@ const checkConditions = function (condList, displayFeedback = true) {
         condList.forEach(function (condObject) {
 
             let found = false;
+            let failMsg;
+
+            if (
+                condObject.failMsg !== undefined &&
+                typeof condObject.failMsg === "string" &&
+                condObject.failMsg !== ""
+            ) {
+                failMsg = condObject.failMsg;
+            } else {
+                failMsg = "no_msg";
+            }
 
             type = condObject.type;
             value = condObject.value;
@@ -587,7 +597,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;
@@ -601,7 +611,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;
@@ -611,7 +621,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;
@@ -621,7 +631,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;
@@ -631,7 +641,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;
@@ -666,7 +676,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
-                    feedback[i] = condObject.failMsg;
+                    feedback[i] = failMsg;
                     i += 1;
                 }
                 break;

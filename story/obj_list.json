@@ -84,21 +84,6 @@
                 "feedback": "",
                 "conditions": [],
                 "consequences": []
-            },
-            {
-                "type": "lick",
-                "activated": true,
-                "button": "Lick closet",
-                "feedback": "",
-                "conditions": [
-                    {
-                        "type": "location",
-                        "obj": "closet",
-                        "value": "locForest",
-                        "failMsg": "I'm not putting my lips on that."
-                    }
-                ],
-                "consequences": []
             }
         ],
         "receive": [

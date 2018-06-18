@@ -3,8 +3,8 @@
         "sectionHTML": "This text will appear. ",
         "type": "add",
         "duration": 1000,
-        "inAnim": "fade",
-        "outAnim": "persist",
+        "inAnim": 500,
+        "outAnim": -1,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
     },
@@ -12,17 +12,17 @@
         "sectionHTML": "This text will appear too, but it will also disappear. ",
         "type": "add",
         "duration": 3000,
-        "inAnim": "fade",
-        "outAnim": "fade",
-        "playSoundfile": "Explosion 2.mp3",
+        "inAnim": 500,
+        "outAnim": 500,
+        "playSoundfile": "no_sound",
         "onEnd": "nothing"
     },
     {
         "sectionHTML": "Another one.",
         "type": "add",
         "duration": 1000,
-        "inAnim": "fade",
-        "outAnim": "persist",
+        "inAnim": 500,
+        "outAnim": -1,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
     }

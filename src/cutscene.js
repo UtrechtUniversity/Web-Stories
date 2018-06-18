@@ -48,14 +48,14 @@ const triggerEvent = function (event, eventArray) {
     // 2. Either add or replace text
     if (event.type === "add") {
         // Add
-        if (event.inAnim === "fade") {
+        if (event.inAnim > 0) {
             // Fade in
 
             $("<div id=\"" + id +
             "\" class=\"cutscene\">" +
             event.sectionHTML + "</div>").appendTo("#text").hide();
 
-            $("#" + id).fadeIn(500);
+            $("#" + id).fadeIn(event.inAnim);
 
 
         } else {
@@ -66,9 +66,9 @@ const triggerEvent = function (event, eventArray) {
 
     } else {
         // Replace
-        if (event.inAnim === "fade") {
+        if (event.inAnim > 0) {
             // Fade in, replaceById will handle this for us
-            replaceById("text", event.sectionHTML, fadeTime);
+            replaceById("text", event.sectionHTML, event.inAnim);
         } else {
             // Instant pop-in
             $("#text").html(event.sectionHTML);
@@ -80,19 +80,19 @@ const triggerEvent = function (event, eventArray) {
         1. Check if it needs to disappear or fade out
             or stay onscreen (persist) */
 
-        if (event.outAnim === "fade" && event.outAnim !== "persist") {
-            $("#" + id).fadeOut(500);
+        if (event.outAnim > 0) {
+            $("#" + id).fadeOut(event.outAnim);
 
-        } else if (event.outAnim !== "fade" && event.outAnim !== "persist") {
+        } else if (event.outAnim === 0) {
             // Just get rid of it
             $("#" + id).remove();
         }
-            
+
         // 2. If there is an onEnd specified: execute it
         if (event.onEnd === "fadeOutAll") {
             replaceById("text", "", fadeTime);
         }
-        
+
         /* 3. Wait for fades to end, then fire next one in line, or if this
            is the last one, then enterLocation. */
         setTimeout (function () {

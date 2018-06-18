@@ -100,7 +100,6 @@
             },
             {
                 "sectionHTML": "<p>Rihanna wants to ({take a walk}) with you.</p>",
-                "fallback": "<p>Rihanna doesn't feel like going for a walk with you.</p>",
                 "conditions": [
                     {
                         "type": "npcComfortLevel",

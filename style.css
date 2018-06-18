@@ -198,6 +198,10 @@ ul, li{
     display: inline;
 }
 
+.cutscene p, .cutscene div, .cutscene ul, .cutscene h1, .cutscene h2, .cutscene h3, .cutscene h4, .cutscene h5, .cutscene h6 {
+    display: inline-block;
+}
+
 .waitForFade {
     visibility: visible;
     opacity: 0;

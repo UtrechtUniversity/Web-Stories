@@ -137,9 +137,7 @@ const enterLocation = function (newLoc) {
         3. If neither is the case: show location content */
 
     updateDebugStats();
-
     let newLocRef = LocationList.get(newLoc);
-    let oldLocRef = LocationList.get(player.locationNext);
 
     /* Check if the new location isn't locked, cause if it is,
     we ain't gonna do it. */

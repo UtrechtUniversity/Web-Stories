@@ -575,13 +575,13 @@ const createButtons = function () {
 
         } else if (type === "directAction") {
 
-            $("#" + thisID).one("click", function () {
+            $("#" + thisID).click(function () {
                 directAction(objID);
             });
 
         } else if (type === "directChange") {
 
-            $("#" + thisID).one("click", function () {
+            $("#" + thisID).click(function () {
                 /* directChange comes from locationParse. objID contains
                 a reference to the changeArray instead of the usual objID...*/
                 change(objID);

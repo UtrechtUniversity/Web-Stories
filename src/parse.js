@@ -5,7 +5,7 @@ import {
     isMenuActive,
     useOnModeActive
 } from "./menu.js";
-import {LocationList, Npc, NpcList, Obj, ObjList} from "./classes.js";
+import {NpcList, ObjList} from "./classes.js";
 import {checkConditions} from "./main.js";
 
 let inlineID = 1;
@@ -210,33 +210,28 @@ are parsed with parseLocation() below. */
 
 const parseLocation = function (content) {
     let parsedContent = [];
-    let found;
-    let macro;
-    let mStart;
-    let mEnd;
-    let mLength;
-    let replacement;
 
     content.forEach(function (section) {
-
+        let macroCond;
+        let macroConseq;
+        let mStart;
+        let mEnd;
+        let mLength;
         let sectionContent = section.sectionHTML;
         let condArea;
         let conseqArea;
-
-        found = false;
+        let entireSection = false;
+        let entireSectionReplaced = false;
 
         /* 1. If conditions are defined: look for condition macro and show
         or hide it depending on whether the conditions are met.
         If conditions are defined but no condition macro is present,
         then the conditions will apply to the entire section.
         Condition macro's are defined by double brackets:
-
-        ((This text will only be shown when conditions are met))
-
+            ((This text will only be shown when conditions are met))
         */
         if (section.conditions.length > 0) {
             // 1.A Look for condition macro
-            let entireSection = false;
             mStart = sectionContent.search(/\({2}/);
             mEnd = sectionContent.search(/\){2}/);
 
@@ -245,7 +240,7 @@ const parseLocation = function (content) {
                 // Include closing brackets in macro
                 mEnd += 2;
                 mLength = mEnd - mStart;
-                macro = sectionContent.substr(mStart, mLength);
+                macroCond = sectionContent.substr(mStart, mLength);
                 // Exclude opening & closing brackets for the replacement
                 mStart += 2;
                 mEnd -= 2;
@@ -254,20 +249,22 @@ const parseLocation = function (content) {
             } else {
                 // No condition macro found; entire section applies
                 condArea = sectionContent;
-                macro = sectionContent;
+                macroCond = sectionContent;
                 entireSection = true;
             }
 
             // 1.B Check if conditions are met. If not: remove it
-            if (checkConditions(section.conditions, false)) {
-                sectionContent = sectionContent.replace(macro, condArea);
+            if (checkConditions(section.conditions)) {
+                /* Conditions are met. Macro is replaced, so the brackets aren't
+                shown */
+                sectionContent = sectionContent.replace(macroCond, condArea);
             } else {
-
-                sectionContent = sectionContent.replace(macro, "");
-
-                /* If the entire section was removed, then check if
-                there is a fallbackHTML */
+                sectionContent = sectionContent.replace(macroCond, "");
+                // Check if there's a fallback specified
                 if (entireSection) {
+
+                    entireSectionReplaced = true;
+
                     if (
                         section.fallback !== undefined &&
                         section.fallback !== ""
@@ -282,11 +279,14 @@ const parseLocation = function (content) {
         and create a link for these consequences.
         If no macro is present then the entire section will be
         used. Consequence macro's are defined like this:
-
-        ({This text will get a link to activate consequences})
-
+            ({This text will get a link to activate consequences})
+        If a fallback was used for the content of this section
+        (this is an option when an entire section doesn't meet the
+        conditions) then consequences shouldn't apply.
         */
-        if (section.consequences.length > 0) {
+        if (section.consequences.length > 0 && !entireSectionReplaced) {
+            mStart = -1;
+            mEnd = -1;
             // 2.A Look for consequence macro
             mStart = sectionContent.search(/\(\{/);
             mEnd = sectionContent.search(/\}\)/);
@@ -296,31 +296,42 @@ const parseLocation = function (content) {
                 // Include closing brackets in macro
                 mEnd += 2;
                 mLength = mEnd - mStart;
-                macro = sectionContent.substr(mStart, mLength);
+                macroConseq = sectionContent.substr(mStart, mLength);
                 // Exclude opening & closing brackets for the replacement
                 mStart += 2;
                 mEnd -= 2;
                 mLength = mEnd - mStart;
                 conseqArea = sectionContent.substr(mStart, mLength);
+            } else {
+                // No consequence macro found: mark entire section
+                conseqArea = sectionContent;
+                macroConseq = sectionContent;
             }
 
-            // 2.B Make link
-            customID = "inlBtn" + inlineID;
-            inlineID += 1;
-
-            let linkedConseqArea = "<a href=\"#\" id=" + customID + ">" +
-            conseqArea + "</a>";
-
-            // 2.C Replace consequence area with linked version
-            sectionContent = sectionContent.replace(macro, linkedConseqArea);
-
-            // 2.D Add to button queue
-            addToButtonQueue(
-                "inline_button",
-                section.consequences,
-                "directChange",
-                customID, -1
-            );
+            /* 2.B Make link, unless conseqArea is empty (f.e. when an
+            entire section was a condition that isn't met, or when a
+            condition macro was surrounded by a conseq macro and the
+            condition isn't met */
+            if (conseqArea.length > 0) {
+                customID = "inlBtn" + inlineID;
+                inlineID += 1;
+    
+                let linkedConseqArea = "<a href=\"#\" id=" + customID + ">" +
+                conseqArea + "</a>";
+    
+                // 2.C Replace consequence area with linked version
+                sectionContent = sectionContent.replace(
+                    macroConseq, linkedConseqArea
+                );
+    
+                // 2.D Add to button queue
+                addToButtonQueue(
+                    "inline_button",
+                    section.consequences,
+                    "directChange",
+                    customID, -1
+                );
+            }
         }
 
         // run it through parse()

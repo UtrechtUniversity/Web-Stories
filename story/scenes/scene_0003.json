@@ -3,7 +3,7 @@
         "enabled": true,
         "responses": [
             {
-                "response": "You go for a walk. She smiles, and shows you around.",
+                "response": "<p>You go for a walk. She smiles, and shows you around.</p>",
                 "conditions": [],
                 "newChoices": ["c1"]
             }

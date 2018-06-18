@@ -117,7 +117,7 @@ const playCutscene = function (url) {
     $.getJSON(url, function (eventArray) {
         startCutscene(eventArray);
     }).fail(function () {
-        logError("main.js/playCutscene: scenefile not found");
+        logError("main.js/playCutscene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
     });
 };
 
@@ -125,7 +125,7 @@ const loadScene = function (url) {
     $.getJSON(url, function (choiceList) {
         startScene(choiceList);
     }).fail(function () {
-        logError("main.js/loadScene: scenefile not found");
+        logError("main.js/loadScene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
     });
 };
 

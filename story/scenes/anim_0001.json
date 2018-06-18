@@ -22,7 +22,7 @@
         "type": "replace",
         "duration": 0,
         "inAnim": 1000,
-        "outAnim": 10000,
+        "outAnim": 1000,
         "playSoundfile": "no_sound",
         "onEnd": "nothing"
     }

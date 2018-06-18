@@ -64,13 +64,11 @@ const triggerEvent = function (event, eventArray) {
         event.sectionHTML + "</div>";
 
         if (event.inAnim > 0) {
-            // Fade in, replaceById will handle this for us
-            replaceById("text", replaceWithHTML, event.inAnim);
-
-            /* We add the inAnim duration a second time to the total
-            duration,because with a replace this duration is used for a fadeOut
-            AND fadeIN, which are done in replaceById. */
-            totalDuration += event.inAnim;
+            /* Pop out, replace, fade in If the user wants a fade out then the
+            previous event should have an outAnim duration > 0 */
+            fadeOut("text", 0);
+            $("#text").html(replaceWithHTML);
+            fadeIn("text", event.inAnim);
         } else {
             // Instant pop-in
             $("#text").html(replaceWithHTML);
@@ -81,9 +79,7 @@ const triggerEvent = function (event, eventArray) {
         /* When it ends:
         1. Check if it needs to disappear (outAnim value of 0)
         or fade out (outAnim value > 0) or stay on screen (value -1) */
-
         if (event.outAnim > 0) {
-            console.log("start fading out " + id + " right meow!");
             $("#" + id).fadeOut(event.outAnim);
         } else if (event.outAnim === 0) {
             // Just get rid of it
@@ -112,7 +108,6 @@ const triggerEvent = function (event, eventArray) {
                 }
             }
         }, event.outAnim);
-
     }, totalDuration);
 };
 

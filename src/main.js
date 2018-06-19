@@ -456,7 +456,7 @@ const startStory = function () {
                 } else {
                     openInventory();
                 }
-            }   
+            }
         }
     };
 
@@ -824,43 +824,31 @@ const change = function (changeArray) {
 
         case "changeObjDescr":
             // REQUIRED: obj, value
-            objRef = ObjList.get(changeObj.obj);
+            // Check if object is Obj or Npc
+            objInfo = getObj(changeObj.obj);
 
-            if (
-                objRef instanceof Obj &&
-                changeObj.value !== undefined &&
-                typeof changeObj.value === "string"
-            ) {
-                objRef.descr = changeObj.value;
-                success = true;
+            if (objInfo.type !== "unknown") {
+                success = objInfo.ref.setDescr(changeObj.value);
             }
             break;
 
         case "changeObjLoc":
             // REQUIRED: obj, value
+            // Check if object is Obj or Npc
             objInfo = getObj(changeObj.obj);
 
-            if (
-                objInfo.type !== "unknown" &&
-                changeObj.value !== undefined &&
-                typeof changeObj.value === "string"
-            ) {
-                objInfo.ref.loc = changeObj.value;
-                success = true;
+            if (objInfo.type !== "unknown") {
+                success = objInfo.ref.setLoc(changeObj.value);
             }
             break;
 
         case "changeObjState":
             // REQUIRED: obj, value
-            objRef = ObjList.get(changeObj.obj);
+            // Check if object is Obj or Npc
+            objInfo = getObj(changeObj.obj);
 
-            if (
-                objRef instanceof Obj &&
-                changeObj.value !== undefined &&
-                typeof changeObj.value === "string"
-            ) {
-                objRef.state = changeObj.value;
-                success = true;
+            if (objInfo.type !== "unknown") {
+                success = objInfo.ref.setState(changeObj.value);
             }
             break;
 
@@ -1114,14 +1102,14 @@ $(document).ready(function () {
                 ) {
                     clearInterval(waitUntilLoaded);
                     let preLoadAudio;
-    
+
                     if (init.muteSound) {
                         // Need to do this before initAudio()
                         muteSound();
                     }
-    
+
                     setAudioFadeTime(init.audioFadeTime);
-    
+
                     // Preload audio from the init.json array
                     if (
                         Array.isArray(init.preLoadAudio) &&
@@ -1132,7 +1120,7 @@ $(document).ready(function () {
                         preLoadAudio = [];
                     }
                     initAudio(init.preloadAudio);
-    
+
                     if (!init.muteSound) {
                         // We had to wait for this until initAudio was called
                         let startLocRef = LocationList.get(init.startLocation);

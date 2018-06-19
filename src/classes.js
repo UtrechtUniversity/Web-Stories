@@ -84,6 +84,42 @@ class SuperObj {
         }
     }
 
+    setDescr (newDescr) {
+        if (
+            newDescr !== undefined && typeof newDescr === "string" &&
+            newDescr !== ""
+        ) {
+            this.descr = newDescr;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    setLoc (newLoc) {
+
+        let locRef = LocationList.get(newLoc);
+
+        if (locRef !== undefined && locRef instanceof Location) {
+            this.loc = newLoc;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    setState (newState) {
+        if (
+            newState !== undefined && typeof newState === "string" &&
+            newState !== ""
+        ) {
+            this.state = newState;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     receiveFromObj (source) {
         // Go through all receive.from's and check if they match with source
         let i = 0;
@@ -119,7 +155,7 @@ class Npc extends SuperObj {
         super(name, descr, loc, state, interactions, receive);
         this.comfortLevel = comfortLevel;
         this.interactions = interactions;
-    
+
         /* Slightly different scene-system here compared to Location objects:
         only active scenes are queued here. */
         this.sceneQueue = scenes;
@@ -382,7 +418,7 @@ const getObj = function (objID) {
     let objType;
 
     objRef = NpcList.get(objID);
-            
+
     if (objRef instanceof Npc) {
         objType = "Npc";
     } else {

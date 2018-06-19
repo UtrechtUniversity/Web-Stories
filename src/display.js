@@ -15,7 +15,7 @@ let topLayer = {
 };
 let bottomLayer = {
     bgClass: "std",
-    img: "no_bg"  
+    img: "no_bg"
 };
 
 // ========================= ANIMATION SYSTEM ========================= \\
@@ -75,6 +75,8 @@ const changeContainerClass = function (locID) {
         if (newClass !== currentContainerClass) {
             $("#container").removeClass(currentContainerClass);
             $("#container").addClass(newClass);
+            $("#menu_container").removeClass(currentContainerClass);
+            $("#menu_container").addClass(newClass);
             currentContainerClass = newClass;
         }
     }
@@ -168,9 +170,9 @@ const changeBg = function (newLocRef) {
                     $("#bg_layer_bottom").css({"background-color" : ""});
                 } else {
                     $("#bg_layer_bottom").css("background", "url('" + bg_url + "') top center no-repeat");
-                    
+
                     $("#bg_layer_bottom").css({"background-color" : ""});
-                    
+
                     $("#bg_layer_bottom").css("background-size", bgSize);
                 }
                 // update bottomLayer
@@ -202,9 +204,9 @@ const changeBg = function (newLocRef) {
                     $("#bg_layer_top").css({"background-color" : ""});
                 } else {
                     $("#bg_layer_top").css("background", "url('" + bg_url + "') top center no-repeat");
-                    
+
                     $("#bg_layer_top").css({"background-color" : ""});
-                    
+
                     $("#bg_layer_top").css("background-size", bgSize);
                 }
                 // update topLayer

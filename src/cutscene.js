@@ -66,7 +66,7 @@ const triggerEvent = function (event, eventArray) {
         if (event.inAnim > 0) {
             /* Pop out, replace, fade in If the user wants a fade out then the
             previous event should have an outAnim duration > 0 */
-            fadeOut("text", 0);
+            $("#text").css("opacity", 0);
             $("#text").html(replaceWithHTML);
             fadeIn("text", event.inAnim);
         } else {

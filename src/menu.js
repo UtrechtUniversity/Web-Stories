@@ -62,6 +62,8 @@ const addToButtonQueue = function (
     }
 
     if (interaction === undefined) {
+        /* interactions are referenced by index number,
+        hence the -1 when there is no interaction specified */
         interaction = -1;
     }
 
@@ -76,6 +78,8 @@ const addToMenuButtonQueue = function (
     }
 
     if (interaction === undefined) {
+        /* interactions are referenced by index number,
+        hence the -1 when there is no interaction specified */
         interaction = -1;
     }
 
@@ -524,12 +528,11 @@ const createButtons = function () {
         }
 
         if (buttonTxt !== "inline_button") {
-            // Regular menu bottons
+            // Regular menu buttons
             buttonTxt = capitalizeFirstLetter(buttonTxt);
 
             $("#" + choiceDiv).append("<li><button id=\"" + thisID + "\" class=\"" + btnClass + "\">" +
                 buttonTxt + "</button></li>");
-
         } else {
             // Inline links
             if (

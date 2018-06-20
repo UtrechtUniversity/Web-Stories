@@ -39,7 +39,7 @@ const fadeIn = function (id, thisFadeTime) {
     In that case only fadeIn() and fadeOut() need
     to be rewritten.
     */
-    if (thisFadeTime === 0 || thisFadeTime === undefined) {
+    if (thisFadeTime < 0 || thisFadeTime === undefined) {
         thisFadeTime = fadeTime;
     }
     let idTag = "#" + id;
@@ -47,7 +47,7 @@ const fadeIn = function (id, thisFadeTime) {
 };
 
 const fadeOut = function (id, thisFadeTime) {
-    if (thisFadeTime === 0 || thisFadeTime === undefined) {
+    if (thisFadeTime < 0 || thisFadeTime === undefined) {
         thisFadeTime = fadeTime;
     }
     let idTag = "#" + id;

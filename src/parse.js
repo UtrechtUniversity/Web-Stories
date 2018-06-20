@@ -89,7 +89,7 @@ are parsed with parseLocation() below. */
                         param2.objID, "changeLoc", "no", -1);
                     }
 
-                    txt = txt.replace(macro,"");
+                    txt = txt.replace(macro, "");
 
                 } else {
                     noLocs = true;
@@ -118,6 +118,7 @@ are parsed with parseLocation() below. */
             closing brackets come AFTER the opening brackets */
             if (((mStart > -1) && (mEnd > 1)) && (mEnd > mStart)) {
 
+                let makeButton = false;
                 found = true;
 
                 /* Isolate everything between the brackets, so that nothing
@@ -132,16 +133,29 @@ are parsed with parseLocation() below. */
                     param1.strt += 1;
                  }
 
+                // Check if macro ends with @ (that's at endposition - 3)
+                if (macro.search(/\@/) === (mLength - 3)) {
+                    makeButton = true;
+                    replacement = "";
+                }
+
                 // Detect if the arrow (->) is found (OPTIONAL)
                 param1.end = macro.search(/->/);
 
                 if (param1.end === -1 || param1.end === undefined) {
+                    // directAction: param1 = param2
                     param1.end = macro.search(/\}{2}/);
+                    if (makeButton) {
+                        param1.end -= 1;
+                    }
                     param1.lngth = param1.end - param1.strt;
                     param2.objID = macro.substr(param1.strt, param1.lngth);
                 } else {
                     param2.strt = param1.end + 2; // moves position after '->'
                     param2.end = macro.search(/\}{2}/);
+                    if (makeButton) {
+                        param2.end -= 1;
+                    }
                     param2.lngth = param2.end - param2.strt;
                     param2.objID = macro.substr(param2.strt, param2.lngth);
                 }
@@ -176,24 +190,53 @@ are parsed with parseLocation() below. */
                 } else {
                     // When the menu is not active:
                     // add regular buttons
-
-                    customID = "inlBtn" + inlineID;
-                    inlineID += 1;
-
-                    if (useOnModeActive) {
-                        replacement = "<a href=\"#\" id=" + customID +
-                        " class=\"useOn\">" + param1.buttonTxt + "</a>";
+                    if (makeButton) {
+                        if (directAction) {
+                            addToButtonQueue(
+                                param1.buttonTxt,
+                                param2.objID,
+                                "directAction",
+                                "no",
+                                -1
+                            );
+                        } else {
+                            addToButtonQueue(
+                                param1.buttonTxt,
+                                param2.objID,
+                                "openMenu",
+                                "no",
+                                -1
+                            );
+                        }
                     } else {
-                        replacement = "<a href=\"#\" id=" + customID +
-                        ">" + param1.buttonTxt + "</a>";
-                    }
-
-                    if (directAction) {
-                        addToButtonQueue("inline_button", param2.objID,
-                        "directAction", customID, -1);
-                    } else {
-                        addToButtonQueue("inline_button", param2.objID,
-                        "openMenu", customID, -1);
+                        customID = "inlBtn" + inlineID;
+                        inlineID += 1;
+    
+                        if (useOnModeActive) {
+                            replacement = "<a href=\"#\" id=" + customID +
+                            " class=\"useOn\">" + param1.buttonTxt + "</a>";
+                        } else {
+                            replacement = "<a href=\"#\" id=" + customID +
+                            ">" + param1.buttonTxt + "</a>";
+                        }
+    
+                        if (directAction) {
+                            addToButtonQueue(
+                                "inline_button",
+                                param2.objID,
+                                "directAction",
+                                customID,
+                                -1
+                            );
+                        } else {
+                            addToButtonQueue(
+                                "inline_button",
+                                param2.objID,
+                                "openMenu",
+                                customID,
+                                -1
+                            );
+                        }
                     }
                 }
                 txt = txt.replace(macro, replacement);
@@ -279,12 +322,14 @@ const parseLocation = function (content) {
         and create a link for these consequences.
         If no macro is present then the entire section will be
         used. Consequence macro's are defined like this:
-            ({This text will get a link to activate consequences})
+            ({This text will get a link to activate consequences@})
+              @ is optional and means it will turn into a button in div#choices
         If a fallback was used for the content of this section
         (this is an option when an entire section doesn't meet the
         conditions) then consequences shouldn't apply.
         */
         if (section.consequences.length > 0 && !entireSectionReplaced) {
+            let makeButton = false;
             mStart = -1;
             mEnd = -1;
             // 2.A Look for consequence macro
@@ -297,10 +342,19 @@ const parseLocation = function (content) {
                 mEnd += 2;
                 mLength = mEnd - mStart;
                 macroConseq = sectionContent.substr(mStart, mLength);
+
+                // Check if macro ends with @ (that's at endposition - 3)
+                if (macroConseq.search(/\@/) === (mLength - 3)) {
+                    makeButton = true;
+                    // Exclude @ from replacement
+                    mEnd -= 1;
+                }
+
                 // Exclude opening & closing brackets for the replacement
                 mStart += 2;
                 mEnd -= 2;
                 mLength = mEnd - mStart;
+
                 conseqArea = sectionContent.substr(mStart, mLength);
             } else {
                 // No consequence macro found: mark entire section
@@ -313,24 +367,43 @@ const parseLocation = function (content) {
             condition macro was surrounded by a conseq macro and the
             condition isn't met */
             if (conseqArea.length > 0) {
-                customID = "inlBtn" + inlineID;
-                inlineID += 1;
-    
-                let linkedConseqArea = "<a href=\"#\" id=" + customID + ">" +
-                conseqArea + "</a>";
-    
-                // 2.C Replace consequence area with linked version
-                sectionContent = sectionContent.replace(
-                    macroConseq, linkedConseqArea
-                );
-    
-                // 2.D Add to button queue
-                addToButtonQueue(
-                    "inline_button",
-                    section.consequences,
-                    "directChange",
-                    customID, -1
-                );
+                if (makeButton) {
+                    // 2.C Empty consequence area
+                    sectionContent = sectionContent.replace(
+                        macroConseq, ""
+                    );
+
+                    // 2.D Add to button queue
+                    addToButtonQueue(
+                        conseqArea,
+                        section.consequences,
+                        "directChange",
+                        "no",
+                        -1
+                    );
+                } else {
+                    let linkedConseqArea;
+
+                    customID = "inlBtn" + inlineID;
+                    inlineID += 1;
+        
+                    linkedConseqArea = "<a href=\"#\" id=" + customID + ">" +
+                    conseqArea + "</a>";
+
+                    // 2.C Replace consequence area with linked version
+                    sectionContent = sectionContent.replace(
+                        macroConseq, linkedConseqArea
+                    );
+
+                    // 2.D Add to button queue
+                    addToButtonQueue(
+                        "inline_button",
+                        section.consequences,
+                        "directChange",
+                        customID,
+                        -1
+                    );
+                }
             }
         }
 

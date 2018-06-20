@@ -64,6 +64,28 @@ header a:link, header a:visited {
     color: grey;
 }
 
+header #muteButton {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+}
+
+a#soundBtn span.on {
+    background: url('img/icon_sound_on.png') top left no-repeat;
+}
+
+a#soundBtn span.on:hover {
+    background: url('img/icon_sound_off.png') top left no-repeat;
+}
+
+a#soundBtn span.off {
+    background: url('img/icon_sound_off.png') top left no-repeat;
+}
+
+a#soundBtn span.off:hover {
+    background: url('img/icon_sound_on.png') top left no-repeat;
+}
+
 #container {
     font-size: 1.1rem;
     max-width: 40rem;

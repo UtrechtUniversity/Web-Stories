@@ -219,7 +219,8 @@ const muteSound = function () {
             }
 
         }
-        replaceById("muteButton", "Mute sound");
+        $("#muteButton").removeClass("off");
+        $("#muteButton").addClass("on");
 
     } else {
         // Mute
@@ -227,7 +228,8 @@ const muteSound = function () {
         if (currentTrack.filename !== "no_sound") {
             fadeSoundOut();
         }
-        replaceById("muteButton", "Unmute sound");
+        $("#muteButton").removeClass("on");
+        $("#muteButton").addClass("off");
     }
 };
 

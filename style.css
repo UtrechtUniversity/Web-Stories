@@ -85,6 +85,7 @@ header #inventoryBtn {
 header #inventoryBtn:hover {
     color: black;
     background-color: white;
+    cursor: pointer;
 }
 
 header #soundBtn, header #fsBtn {

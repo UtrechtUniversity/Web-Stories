@@ -319,6 +319,21 @@ const hideMenu = function () {
     // 200ms is the delay time for the animations in the stylesheet
     }, 200);
 
+    if (player.location === player.inventory.name) {
+        /* Inventory is active and will be closed, so we need to re-add the
+        click listener that was removed in openInventory().
+        Timeout is necessary, because somehow a click that is registered
+        by the outsideClickListener will also count as a click that
+        activates the freshly added click listener below (if the click was
+        in the same spot as the inventory button) and will therefore relaunch
+        the inventory. */
+        setTimeout(function () {
+            $("#inventoryBtn").on("click", function () {
+                openInventory();
+            });
+        }, 200);
+    }
+
     // Automatically close everything that was opened
     // on deeper levels than the first
     if (menuTracker.length > 1) {
@@ -429,11 +444,13 @@ const openMenu = function (objID) {
 
 const openInventory = function () {
 
-    let item;
     let keyRef;
     let delay;
     let objID = player.inventory.name;
     let objRef = ObjList.get(objID);
+
+    // Remove event handler for inventory button
+    $("#inventoryBtn").off();
 
     if (menuLock) {
         delay = 250;
@@ -441,7 +458,7 @@ const openInventory = function () {
         delay = 0;
     }
     /* This timeout is to prevent the menu from simultaneously
-     opening and closing when the player clicks on something outside
+    opening and closing when the player clicks on something outside
     of the menu while the menu is open. The delay time of 250ms is slightly
     longer than the duration of the animation (200ms), which is used for
     delaying the hiding of the menu is hideMenu(), so this part will

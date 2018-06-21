@@ -46,7 +46,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "0.9.2";
+const VERSION = "0.9.3";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -476,9 +476,11 @@ const startStory = function () {
 
     if (init.enableInventory) {
         // Clickable button
-        $("#inventory").click(openInventory);
+        $("#inventoryBtn").on("click", function () {
+            openInventory();
+        });
     } else {
-        document.getElementById("inventory").style.display = "none";
+        document.getElementById("inventoryBtn").style.display = "none";
     }
 
     if (init.debugStats) {

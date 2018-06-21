@@ -219,8 +219,8 @@ const muteSound = function () {
             }
 
         }
-        $("#muteButton").removeClass("off");
-        $("#muteButton").addClass("on");
+        $("#soundBtn").removeClass("sound_off");
+        $("#soundBtn").addClass("sound_on");
 
     } else {
         // Mute
@@ -228,8 +228,8 @@ const muteSound = function () {
         if (currentTrack.filename !== "no_sound") {
             fadeSoundOut();
         }
-        $("#muteButton").removeClass("on");
-        $("#muteButton").addClass("off");
+        $("#soundBtn").removeClass("sound_on");
+        $("#soundBtn").addClass("sound_off");
     }
 };
 

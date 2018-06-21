@@ -9,6 +9,7 @@ let fadeTime = 1000;
 let feedbackTime = 5000;
 let feedbackActive = false;
 let topLayerActive = true;
+let fullscreen = false;
 let topLayer = {
     bgClass: "std",
     img: "no_bg"
@@ -343,25 +344,50 @@ const setFeedbackTime = function (newFeedbackTime) {
     }
 };
 
-const enterFullscreen = function (element) {
-    if (element.requestFullscreen) {
-        element.requestFullscreen();
-    } else if (element.mozRequestFullScreen) {
-        element.mozRequestFullScreen();
-    } else if (element.webkitRequestFullscreen) {
-        element.webkitRequestFullscreen();
-    } else if (element.msRequestFullscreen) {
-        element.msRequestFullscreen();
-    }
-};
-
-const exitFullscreen = function () {
-    if (document.exitFullscreen) {
-        document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
+const toggleFullscreen = function () {
+    if (
+        !fullscreen && (
+        document.fullscreenEnabled || 
+        document.webkitFullscreenEnabled || 
+        document.mozFullScreenEnabled ||
+        document.msFullscreenEnabled
+        )
+    ) {
+        // ENTER fullscreen
+        fullscreen = true;
+        $("#fsBtn").removeClass("fs_enter");
+        $("#fsBtn").addClass("fs_exit");
+        let elem = document.querySelector("body");
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+    } else if (
+        fullscreen && (
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+        )
+    ) {
+        // EXIT fullscreen
+        fullscreen = false;
+        $("#fsBtn").removeClass("fs_exit");
+        $("#fsBtn").addClass("fs_enter");
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
     }
 };
 
@@ -379,6 +405,5 @@ export {
     setFadeTime,
     fadeIn,
     fadeOut,
-    enterFullscreen,
-    exitFullscreen
+    toggleFullscreen
 };

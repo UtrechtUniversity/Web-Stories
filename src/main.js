@@ -19,7 +19,8 @@ import {
     setFadeTime,
     setFeedbackTime,
     showFeedback,
-    compositFeedback
+    compositFeedback,
+    toggleFullscreen
 } from "./display.js";
 import {
     addToButtonQueue,
@@ -45,7 +46,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "0.9.1";
+const VERSION = "0.9.2";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -484,8 +485,11 @@ const startStory = function () {
         document.getElementById("debugstats").style.display = "block";
     }
 
-    // Add clickable functions for 'Mute sound'
-    $("#muteButton").click(muteSound);
+    // Add clickable functions for sound button
+    $("#soundBtn").click(muteSound);
+
+    // Add clickable function for fullscreen button
+    $("#fsBtn").click(toggleFullscreen);
 
     document.getElementById("storyTitle").style.display = "none";
     document.querySelector("header").style.opacity = 1;

@@ -5,25 +5,32 @@ html {
 
 body {
     font-size: 1em;
-    font-family: Arial;
+    font-family: Arial, Helvetica, sans-serif;
+    position: relative;
+    float: left;
+    width: 100%;
+    min-height: 100vh;
+    height: 100%;
     margin: 0;
     padding: 0;
 }
 
 body.std {
-    background-color: black;
+    color: rgb(250, 250, 250);
+    background-color: rgb(5, 5, 5);
 }
 
 #bg_layer_top, #bg_layer_bottom {
     position: absolute;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    background-attachment: fixed;
     transition: opacity 1s ease-in-out;
     -webkit-transition: opacity 1s ease-in-out;
     -moz-transition: opacity 1s ease-in-out;
-    -o-transition: opacity 1s ease-in-out;
+    -ms-transition: opacity 1s ease-in-out;
 }
 
 #bg_layer_top {
@@ -31,7 +38,7 @@ body.std {
 }
 
 #bg_layer_top.std {
-    background-color: black;
+    background-color: rgb(5, 5, 5);
 }
 
 #bg_layer_bottom {
@@ -39,7 +46,7 @@ body.std {
 }
 
 #bg_layer_bottom.std {
-    background-color: black;
+    background-color: rgb(5, 5, 5);
 }
 
 header {
@@ -56,80 +63,113 @@ header {
     transition: opacity 500ms ease-in-out;
     -webkit-transition: opacity 500ms ease-in-out;
     -moz-transition: opacity 500ms ease-in-out;
-    -o-transition: opacity 500ms ease-in-out;
+    -ms-transition: opacity 500ms ease-in-out;
 }
 
-header a:link, header a:visited {
-    background-color: black;
-    color: grey;
+header a:link, header a:visited, header a:hover, header a:active {
+    background: none;
+    text-decoration: none;
+    border: 0;
 }
 
-header #muteButton {
+header #inventoryBtn {
+    position: relative;
+    float: left;
+    padding: 0.4em;
+    display: block;
+    color: white;
+    background-color: rgb(0, 68, 131);
+    border-radius: 8px;
+}
+
+header #inventoryBtn:hover {
+    color: black;
+    background-color: white;
+}
+
+header #soundBtn, header #fsBtn {
     display: inline-block;
     width: 32px;
     height: 32px;
 }
 
-a#soundBtn span.on {
+header .sound_on {
     background: url('img/icon_sound_on.png') top left no-repeat;
 }
 
-a#soundBtn span.on:hover {
+header .sound_on:hover {
+    background: url('img/icon_sound_on_hover.png') top left no-repeat;
+}
+
+header .sound_off {
     background: url('img/icon_sound_off.png') top left no-repeat;
 }
 
-a#soundBtn span.off {
-    background: url('img/icon_sound_off.png') top left no-repeat;
+header .sound_off:hover {
+    background: url('img/icon_sound_off_hover.png') top left no-repeat;
 }
 
-a#soundBtn span.off:hover {
-    background: url('img/icon_sound_on.png') top left no-repeat;
+header .fs_enter {
+    background: url('img/icon_fs_enter.png') top left no-repeat;
+}
+
+header .fs_enter:hover {
+    background: url('img/icon_fs_enter_hover.png') top left no-repeat;
+}
+
+header .fs_exit {
+    background: url('img/icon_fs_exit.png') top left no-repeat;
+}
+
+header .fs_exit:hover {
+    background: url('img/icon_fs_exit_hover.png') top left no-repeat;
 }
 
 #container {
     font-size: 1.1rem;
     max-width: 40rem;
-    height: 80vh;
     margin: 0 auto;
     padding: 0.5em;
     padding-top: 12vh;
 }
 
 #container.std {
-    color: white;
+    color: rgb(250, 250, 250);
 }
 
 button {
     font-size: 1em;
     left: 20px;
     padding: 0.6em;
+    text-align: left;
     transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
     -webkit-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
     -moz-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
-    -o-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
+    -ms-transition: background-color 500ms ease-in-out, color 500ms ease-in-out;
 }
 
 button.std {
-    color: white;
+    color: rgb(250, 250, 250);
     background: none;
-    border: 1px solid white;
+    border: 0;
+    border-bottom: 2px solid rgb(250, 250, 250);
 }
 
 button.std:hover {
-    color: rgb(0, 0, 0);
-    background-color: white;
+    color: black;
+    background-color: rgb(250, 250, 250);
 }
 
-#feedback {
+#feedback, #menu_feedback {
     position: absolute;
     z-index: 20;
     background-color: rgb(0, 68, 131);
-    color: white;
+    color: rgb(250, 250, 250);
     opacity: 0;
     transition: opacity 500ms ease-in-out;
     -webkit-transition: opacity 500ms ease-in-out;
     -moz-transition: opacity 500ms ease-in-out;
-    -o-transition: opacity 500ms ease-in-out;
+    -ms-transition: opacity 500ms ease-in-out;
 }
 
 #feedback {
@@ -143,7 +183,7 @@ button.std:hover {
     position: absolute;
     z-index: -2;
     left: 10px;
-    top: 30px;
+    top: 60px;
     width: 500px;
     margin-left: 10px;
     overflow: hidden;
@@ -169,24 +209,25 @@ a:link, a:visited {
     padding: 0 0.2em;
     text-decoration: none;
     border-width: 0;
-    color: black;
-    background-color: white;
+    border-bottom: 2px solid rgb(250, 250, 250);
+    color: rgb(250, 250, 250);
+    background: none;
     transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
     -webkit-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
     -moz-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
-    -o-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+    -ms-transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
 }
 a:hover { 
-    color: white;
-    background-color: #0093c4;
+    color: rgb(5, 5, 5);
+    background-color: rgb(250, 250, 250);
 }
 
 a:active {
-    color: black;
+    color: rgb(5, 5, 5);
 }
 
 a.useOn:link, a.useOn:visited {
-    color: white;
+    color: rgb(250, 250, 250);
     background-color: #01a767;
 }
 
@@ -202,6 +243,14 @@ ul, li{
     margin-left: 0;
     padding-left: 0;
     list-style-type: none;
+}
+
+#text ul {
+    padding-left: 2em;
+}
+
+#text li {
+    list-style-type: disc;
 }
 
 .blur {
@@ -230,7 +279,7 @@ ul, li{
     transition: opacity 500ms ease-in-out;
     -webkit-transition: opacity 500ms ease-in-out;
     -moz-transition: opacity 500ms ease-in-out;
-    -o-transition: opacity 500ms ease-in-out;
+    -ms-transition: opacity 500ms ease-in-out;
 }
 
 

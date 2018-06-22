@@ -255,6 +255,7 @@ const getAudioTrack = function (filename) {
             found = true;
             trackNr = i;
         }
+        i += 1;
     }
 
     if (found) {

@@ -26,6 +26,7 @@ class Location {
         this.scenes = scenes;
         this.content = content;
         this.styling = styling;
+        this.visited = false;
 
         LocationList.set(locID, this);
         return this;
@@ -56,6 +57,14 @@ class Location {
         } else {
             return false;
         }
+    }
+
+    visit () {
+        this.visited = true;
+    }
+
+    getVisited () {
+        return this.visited;
     }
 
 }

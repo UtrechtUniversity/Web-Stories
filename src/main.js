@@ -168,6 +168,8 @@ const enterLocation = function (newLoc) {
         player.locationPrev = player.location;
         player.location = newLoc;
         player.inScene = false;
+        // set loc.visited to 'true'
+        newLocRef.visit();
 
         // 1 - Check if a cutscene needs to be played and if so: play it.
        let sceneName;
@@ -586,7 +588,9 @@ const checkConditions = function (condList, displayFeedback = true) {
                 loc = LocationList.get(condObject.loc);
 
                 if (loc instanceof Location) {
-                    objRef = LocationList.get(condObject.loc);
+                    objRef = loc;
+                } else {
+                    objRef = "no_location";
                 }
             }
 
@@ -600,16 +604,6 @@ const checkConditions = function (condList, displayFeedback = true) {
             }
 
             switch (type) {
-            case "state":
-                if (objRef.state === value) {
-                    checkArray.push(true);
-                } else {
-                    checkArray.push(false);
-                    feedback[i] = failMsg;
-                    i += 1;
-                }
-                break;
-
             case "inInventory":
                 if (Inventory.has(objRef.name)) {
                     found = true;
@@ -654,6 +648,16 @@ const checkConditions = function (condList, displayFeedback = true) {
                 }
                 break;
 
+            case "state":
+                if (objRef.state === value) {
+                    checkArray.push(true);
+                } else {
+                    checkArray.push(false);
+                    feedback[i] = failMsg;
+                    i += 1;
+                }
+                break;
+
             case "storySetting":
                 success = false;
 
@@ -685,6 +689,23 @@ const checkConditions = function (condList, displayFeedback = true) {
                 } else {
                     checkArray.push(false);
                     feedback[i] = failMsg;
+                    i += 1;
+                }
+                break;
+
+            case "visited":
+                if (objRef !== "no_location") {
+                    if (objRef.getVisited()) {
+                        checkArray.push(true);
+                    } else {
+                        checkArray.push(false);
+                        feedback[i] = failMsg;
+                        i += 1;
+                    }
+                } else {
+                    checkArray.push(false);
+                    feedback[i] = failMsg;
+                    logError("invalid locID specified for visited-condition");
                     i += 1;
                 }
                 break;

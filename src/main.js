@@ -6,7 +6,9 @@ import {
     setAudioFadeTime,
     setCurrentTrack,
     soundMuted,
-    getAudioTrack
+    getAudioTrack,
+    loadSound,
+    playSound
 } from "./audio.js";
 import {startCutscene} from "./cutscene.js";
 import {
@@ -731,8 +733,8 @@ const change = function (changeArray) {
     let locRef;
     let npcRef;
     let objInfo;
-    let objRef;
-    let objType;
+    let url;
+    let soundIndex;
     let feedback = [];
     let i = 0;
 
@@ -936,7 +938,7 @@ const change = function (changeArray) {
             }
             break;
 
-            case "increaseNpcComfort":
+        case "increaseNpcComfort":
             // REQUIRED: npc, amount
             npcRef = NpcList.get(changeObj.npc);
 
@@ -947,6 +949,20 @@ const change = function (changeArray) {
             ) {
                 npcRef.comfortLevel += changeObj.amount;
                 success = true;
+            }
+            break;
+
+        case "playSound": 
+            // REQUIRED: url
+            if (
+                changeObj.url !== undefined &&
+                typeof changeObj.url === "string"
+            ) {
+                url = "story/audio/" + changeObj.url;
+                soundIndex = loadSound(url);
+                if (soundIndex >= 0) {
+                    playSound(soundIndex);
+                }
             }
             break;
 
@@ -1139,11 +1155,11 @@ $(document).ready(function () {
                             */
                             firstAudioTrack = getAudioTrack(startLocRef.locSnd);
                             setCurrentTrack(firstAudioTrack);
-                            firstAudioTrack.sound.load();
+                            firstAudioTrack.howl.load();
                             console.log("Loading first audiotrack: " +
                             firstAudioTrack.filename);
-                            firstAudioTrack.sound.volume(1);
-                            firstAudioTrack.sound.play();
+                            firstAudioTrack.howl.volume(1);
+                            firstAudioTrack.howl.play();
                         }
                     }
                     fadeOut("container", fadeTime);

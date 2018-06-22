@@ -1,8 +1,12 @@
-import {replaceById} from "./display.js";
 import {updateDebugStats} from "./main.js";
 import {LocationList} from "./classes.js";
 
 /*
+TRACKS refer to audio files that play in the background
+and that are tied to a location.
+
+SOUNDS refer to sound effects that can be triggered.
+
 Tracks have the following format:
 track.filename
 track.sound (is a Howl object)
@@ -10,6 +14,7 @@ track.sound (is a Howl object)
 
 let soundMuted = false;
 let allTracks = [];
+let allSounds = [];
 let currentTrack = {
     filename: "no_sound"
 };
@@ -159,16 +164,23 @@ const initAudio = function (preloadAudio) {
     LocationList.forEach(function (loc) {
 
         let toPreload = false;
+        let track = "";
 
         if (loc.locSnd !== "no_sound") {
 
             let exists = false;
+            let i = 0;
 
-            allTracks.forEach(function (track) {
+            while (i < allTracks.length) {
+                track = allTracks[i];
+
                 if (track.filename === loc.locSnd) {
                     exists = true;
+                    break;
                 }
-            });
+
+                i += 1;
+            }
 
             // In case it doesn't: create Howl object and add it to the list
             if (!exists) {
@@ -282,6 +294,45 @@ const createSoundObj = function (url, toPreload) {
 
 };
 
+const loadSound = function (url) {
+    // 1 Check if the sound already exists in allSounds
+    let found = false;
+    let sound = "";
+    let soundIndex;
+    let j = 0;
+
+    while (j < allSounds.length) {
+        sound = allSounds[j];
+
+        if (sound === url) {
+            // It exists, so just return its index number
+            found = true;
+            soundIndex = j;
+            break;
+        }
+
+        j += 1;
+    }
+
+    // 2 If not, then create a new sound object
+    if (!found) {
+        allSounds.push(createSoundObj(url, true));
+        /* If no sound was found then j will have the same
+        value as allSounds.length, which will correspond to the index
+        our newly created sound will get */
+        soundIndex = j;
+    }
+
+    // 3 Return index nr
+    return soundIndex;
+};
+
+const playSound = function (i) {
+    if (!soundMuted && allSounds[i] !== undefined) {
+        allSounds[i].play();
+    }
+};
+
 export default "loaded";
 export {
     isPlayingAudio,
@@ -292,5 +343,7 @@ export {
     setCurrentTrack,
     soundMuted,
     getAudioTrack,
-    createSoundObj
+    createSoundObj,
+    loadSound,
+    playSound
 };

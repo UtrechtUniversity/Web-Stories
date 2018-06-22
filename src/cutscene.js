@@ -1,6 +1,8 @@
-import {createSoundObj} from "./audio.js";
+import {loadSound, playSound} from "./audio.js";
 import {LocationList} from "./classes.js";
-import {changeContainerClass, replaceById, fadeIn, fadeOut, fadeTime} from "./display.js";
+import {
+    changeContainerClass, replaceById, fadeIn, fadeOut, fadeTime
+} from "./display.js";
 import {enterLocation, player} from "./main.js";
 
 const startCutscene = function (eventArray) {
@@ -15,7 +17,7 @@ const startCutscene = function (eventArray) {
             let url = "story/audio/" + event.playSoundfile;
 
             // Store soundObj
-            event.soundObj = createSoundObj(url, true);
+            event.soundIndex = loadSound(url);
 
         }
     });
@@ -42,8 +44,8 @@ const triggerEvent = function (event, eventArray) {
     let totalDuration = event.duration + event.inAnim;
 
     // 1. Play sound if specified
-    if (event.playSoundfile !== "no_sound") {
-        event.soundObj.play();
+    if (event.playSoundfile !== "no_sound" && event.soundIndex !== undefined) {
+        playSound(event.soundIndex);
     }
 
     // 2. Either add or replace text

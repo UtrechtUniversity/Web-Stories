@@ -207,7 +207,7 @@ const initAudio = function (preloadAudio) {
 
                 let newTrack = {
                     filename: loc.locSnd,
-                    sound: sound
+                    howl: sound
                 };
                 allTracks.push(newTrack);
             }

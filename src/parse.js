@@ -2,7 +2,7 @@ import {
     addToButtonQueue,
     addToMenuButtonQueue,
     addToMenu,
-    isMenuActive,
+    menuActive,
     useOnModeActive
 } from "./menu.js";
 import {NpcList, ObjList} from "./classes.js";
@@ -80,7 +80,7 @@ are parsed with parseLocation() below. */
                     param1.buttonTxt = macro.substr(2, param1.lngth);
                     param2.objID = macro.substr(param2.strt, param2.lngth);
 
-                    if (isMenuActive()) {
+                    if (menuActive) {
                         // add its properties to the current menu
                         addToMenuButtonQueue(param1.buttonTxt,
                         param2.objID, "changeLoc", "no", -1);
@@ -165,7 +165,7 @@ are parsed with parseLocation() below. */
 
                 /* If the interactive menu is open:
                 add object properties to menu */
-                if (isMenuActive()) {
+                if (menuActive) {
 
                     let objRef = ObjList.get(param2.objID);
                     let npcRef = NpcList.get(param2.objID);

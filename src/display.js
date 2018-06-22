@@ -1,5 +1,5 @@
 import {Location, LocationList} from "./classes.js";
-import {deactivateUseOnMode, isMenuActive} from "./menu.js";
+import {deactivateUseOnMode, menuActive} from "./menu.js";
 
 let bgSize = "contain";
 let currentBg = "no_bg";
@@ -276,7 +276,7 @@ const showFeedback = function () {
     let persist = feedbackQueue[0].persist;
     let useOnMode = feedbackQueue[0].useOnMode;
 
-    if (isMenuActive()) {
+    if (menuActive) {
         id = "menu_" + id;
     }
 

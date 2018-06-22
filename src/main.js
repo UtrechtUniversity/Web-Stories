@@ -28,7 +28,7 @@ import {
     addToButtonQueue,
     createButtons,
     hideMenu,
-    isMenuActive,
+    menuActive,
     menuTracker,
     openInventory
 } from "./menu.js";
@@ -103,7 +103,7 @@ const updateDebugStats = function () {
     $("#playernextloc").html(player.locationNext);
     $("#inScene").html(player.inScene);
     $("#inObject").html(player.inObject);
-    $("#menu_active").html(isMenuActive());
+    $("#menu_active").html(menuActive);
     $("#menu_tracker").html("");
     menuTracker.forEach(function (item) {
         $("#menu_tracker").append("<li>&gt; " + item + "</li>");
@@ -151,7 +151,7 @@ const enterLocation = function (newLoc) {
         // We will have to leave 'object' mode when entering a new location
         player.inObject = false;
 
-        if (isMenuActive()) {
+        if (menuActive) {
             hideMenu();
         }
 
@@ -449,7 +449,7 @@ const startStory = function () {
         }
 
         if (isEscape) {
-            if (isMenuActive()) {
+            if (menuActive) {
                 hideMenu();
             }
         }

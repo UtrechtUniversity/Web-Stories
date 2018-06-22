@@ -33,14 +33,6 @@ let useOnModeActive = false;
 let useOnSource;
 let buttonID = 1;
 
-const isMenuActive = function () {
-    if (menuActive) {
-        return true;
-    } else {
-        return false;
-    }
-};
-
 const capitalizeFirstLetter = function (text) {
     return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -149,7 +141,7 @@ const setMenuTitle = function (newTitle) {
 const outsideClickListener = function (event) {
     // Used for detecting a click outside the interaction menu
     if (!$(event.target).closest("#menu_container").length) {
-        if (isMenuActive()) {
+        if (menuActive) {
             hideMenu();
         }
     }
@@ -432,7 +424,7 @@ const openMenu = function (objID) {
             addToMenu(objID);
 
             // Showmenu when menu isn't active, else just refresh
-            if (isMenuActive()) {
+            if (menuActive) {
                 refreshMenu(objID);
             } else {
                 showMenu(objID);
@@ -485,7 +477,7 @@ const openInventory = function () {
         });
 
         // Showmenu when menu isn't active, else just refresh
-        if (isMenuActive()) {
+        if (menuActive) {
             refreshMenu(objID);
         } else {
             showMenu(objID);
@@ -654,7 +646,7 @@ export {
     openInventory,
     openMenu,
     refreshMenu,
-    isMenuActive,
+    menuActive,
     hideMenu,
     useOnMode,
     useOnModeActive,

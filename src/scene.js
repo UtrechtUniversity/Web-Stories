@@ -10,7 +10,7 @@ import {
     addToButtonQueue,
     createButtons,
     hideMenu,
-    isMenuActive
+    menuActive
 } from "./menu.js";
 import {LocationList} from "./classes.js";
 import {parse} from "./parse.js";
@@ -46,7 +46,7 @@ const advanceScene = function (c) {
     let selectedResponse;
     updateDebugStats();
 
-    if (isMenuActive()) {
+    if (menuActive) {
 
         /*
         Hide menu BEFORE changing player.inScene value, because else you

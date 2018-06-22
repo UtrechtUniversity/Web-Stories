@@ -1,4 +1,4 @@
-import {updateDebugStats} from "./main.js";
+import {logError, updateDebugStats} from "./main.js";
 import {LocationList} from "./classes.js";
 
 /*
@@ -7,9 +7,9 @@ and that are tied to a location.
 
 SOUNDS refer to sound effects that can be triggered.
 
-Tracks have the following format:
-track.filename
-track.sound (is a Howl object)
+Tracks and sounds have the following parameters:
+sound.filename
+sound.howl (is a Howl object)
 */
 
 let soundMuted = false;
@@ -23,9 +23,9 @@ let fadeTime = 1000;
 
 const fadeSoundIn = function () {
 
-    currentTrack.sound.volume(0);
-    currentTrack.sound.play();
-    currentTrack.sound.fade(0, 1, fadeTime);
+    currentTrack.howl.volume(0);
+    currentTrack.howl.play();
+    currentTrack.howl.fade(0, 1, fadeTime);
 
     $("#soundInfo").text("playing " + currentTrack.filename);
 
@@ -44,10 +44,10 @@ const fadeSoundOut = function () {
 
     if (thisTrack.filename !== "no_sound") {
 
-        thisTrack.sound.fade(1, 0, fadeTime);
+        thisTrack.howl.fade(1, 0, fadeTime);
         setTimeout(function () {
 
-            thisTrack.sound.pause();
+            thisTrack.howl.pause();
             $("#soundInfo").text("playback paused");
         }, fadeTime);
     }
@@ -62,7 +62,7 @@ const playTrack = function (newTrack) {
     let prevTrack = currentTrack;
     currentTrack = newTrack;
     if (!soundMuted) {
-        currentTrack.sound.play();
+        currentTrack.howl.play();
     }
 
     $("#soundInfo").text("track changed: " + newTrack.filename);
@@ -74,11 +74,11 @@ const playTrack = function (newTrack) {
         prevTrack.filename !== "no_sound"
     ) {
         // There's a track playing and we need to crossfade into the new one
-        prevTrack.sound.fade(1, 0, fadeTime);
-        currentTrack.sound.fade(0, 1, fadeTime);
+        prevTrack.howl.fade(1, 0, fadeTime);
+        currentTrack.howl.fade(0, 1, fadeTime);
 
         setTimeout(function () {
-            prevTrack.sound.pause();
+            prevTrack.howl.pause();
         }, 2000);
 
     } else if (
@@ -119,13 +119,13 @@ const changeTrack = function (newSnd) {
             if (found && !soundMuted) {
                 let track = allTracks[trackNr];
 
-                if (track.sound.state() === "unloaded") {
-                    track.sound.load();
-                    track.sound.once("load", function () {
+                if (track.howl.state() === "unloaded") {
+                    track.howl.load();
+                    track.howl.once("load", function () {
                         playTrack(track);
                     });
-                } else if (track.sound.state() === "loading") {
-                    track.sound.once("load", function () {
+                } else if (track.howl.state() === "loading") {
+                    track.howl.once("load", function () {
                         playTrack(track);
                     });
                 } else {
@@ -221,11 +221,11 @@ const muteSound = function () {
         // Unmute
         soundMuted = false;
         if (currentTrack.filename !== "no_sound") {
-            if (currentTrack.sound.state() === "loaded") {
+            if (currentTrack.howl.state() === "loaded") {
                 fadeSoundIn();
             } else {
-                currentTrack.sound.load();
-                currentTrack.sound.once("load", function () {
+                currentTrack.howl.load();
+                currentTrack.howl.once("load", function () {
                     fadeSoundIn();
                 });
             }
@@ -304,7 +304,7 @@ const loadSound = function (url) {
     while (j < allSounds.length) {
         sound = allSounds[j];
 
-        if (sound === url) {
+        if (sound.filename === url) {
             // It exists, so just return its index number
             found = true;
             soundIndex = j;
@@ -316,11 +316,33 @@ const loadSound = function (url) {
 
     // 2 If not, then create a new sound object
     if (!found) {
-        allSounds.push(createSoundObj(url, true));
-        /* If no sound was found then j will have the same
-        value as allSounds.length, which will correspond to the index
-        our newly created sound will get */
-        soundIndex = j;
+        let extPattern = /(?:\.([^.]+))?$/;
+        let ext = extPattern.exec(url)[1];
+        if (
+            // Need better validation of actual MIME-types, not just extension
+            ext !== undefined && (ext === "mp3" || ext === "wav" ||
+            ext === "ogg" || ext === "aac" || ext === "flac")
+        ) {
+            let newSoundObj = {};
+            newSoundObj.filename = url;
+            newSoundObj.howl = createSoundObj(url, true);
+
+            if (newSoundObj.howl instanceof Howl) {
+                allSounds.push(newSoundObj);
+
+                /* If no sound was found then j will have the same
+                value as allSounds.length, which will correspond to the index
+                our newly created sound will get */
+                soundIndex = j;
+            } else {
+                // Something went wrong
+                logError("could not create new Howl sound object");
+                soundIndex = -1;
+            }
+        } else {
+            logError("soundfile format not supported");
+            soundIndex = -1;
+        }
     }
 
     // 3 Return index nr
@@ -329,7 +351,7 @@ const loadSound = function (url) {
 
 const playSound = function (i) {
     if (!soundMuted && allSounds[i] !== undefined) {
-        allSounds[i].play();
+        allSounds[i].howl.play();
     }
 };
 

@@ -12,7 +12,7 @@ import {
     fadeOut,
     fadeTime,
     replaceById,
-    showFeedback,
+    addFeedback,
     clearFeedback
 } from "./display.js";
 import {advanceScene} from "./scene.js";
@@ -380,7 +380,7 @@ const useOnMode = function (source) {
 
     // useOnMode will always be triggered from the interaction menu
     hideMenu();
-    showFeedback("<a href=\"#\" id=\"cancelUseOn\">cancel</a> Use " + useOnSource + " on:", true, true);
+    addFeedback("<a href=\"#\" id=\"cancelUseOn\">cancel</a> Use " + useOnSource + " on:", true, true);
 
 };
 
@@ -388,7 +388,7 @@ const deactivateUseOnMode = function (refresh = false) {
     if (useOnModeActive) {
         useOnModeActive = false;
         clearFeedback(true, true);
-        showFeedback("'Use on' cancelled");
+        addFeedback("'Use on' cancelled");
         if (refresh) {
             refreshLocation();
         }

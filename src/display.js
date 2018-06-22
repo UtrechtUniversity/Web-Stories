@@ -7,7 +7,7 @@ let currentBgClass = "std";
 let currentContainerClass = "std";
 let fadeTime = 1000;
 let feedbackTime = 5000;
-let feedbackActive = false;
+let feedbackQueue = [];
 let topLayerActive = true;
 let fullscreen = false;
 let topLayer = {
@@ -238,57 +238,71 @@ const setBgSize = function (newSize) {
     bgSize = newSize;
 };
 
-const showFeedback = function (feedback, persist = false, useOnMode = false) {
+const addFeedback = function (feedback, persist = false, useOnMode = false) {
 
-    let id = "feedback";
-    let delay = 0;
-
-    if (isMenuActive()) {
-        id = "menu_" + id;
-    }
+    let feedbackObj = {
+        msg: feedback,
+        persist: persist,
+        useOnMode: useOnMode
+    };
 
     if (
         feedback !== undefined &&
         typeof feedback === "string" &&
         feedback !== ""
     ) {
-
-        if (feedbackActive) {
-            // Wait a second before showing the next
-            delay = 1000;
+        /* If another item is being displayed: add this feedback to the
+        feedbackQueue. This message will then automatically be shown once the
+        other message finishes. Do not add to feedbackQueue if this message is
+        in the queue already (to prevent many of the same messages from
+        stacking, in case player clicks multiple times on something that fires
+        the feedback) */
+        if (feedbackQueue.length > 0) {
+            let lastIndex = feedbackQueue.length -1;
+            if (feedbackQueue[lastIndex].msg !== feedback) {
+                feedbackQueue.push(feedbackObj);
+            }
+        } else {
+            feedbackQueue.push(feedbackObj);
+            showFeedback();
         }
+    }
+};
 
+const showFeedback = function () {
+
+    let id = "feedback";
+    let feedback = feedbackQueue[0].msg;
+    let persist = feedbackQueue[0].persist;
+    let useOnMode = feedbackQueue[0].useOnMode;
+
+    if (isMenuActive()) {
+        id = "menu_" + id;
+    }
+
+    replaceById(id, feedback, 0);
+    document.getElementById(id).style.opacity = 1;
+
+    // Add cancel button when feedback shows the useOn message
+    if (useOnMode) {
+        $("#cancelUseOn").one("click", function () {
+            deactivateUseOnMode(true);
+        });
+    }
+
+    if (!persist) {
         setTimeout(function () {
-            if (feedbackActive) {
+            // Remove this message from queue
+            feedbackQueue.splice(0, 1);
+
+            if (feedbackQueue.length > 0) {
+                // Display next message in queue
+                showFeedback();
+            } else {
                 // Fade out
                 document.getElementById(id).style.opacity = 0;
-                delay = 500;
-            } else {
-                delay = 0;
             }
-            feedbackActive = true;
-
-            setTimeout(function () {
-                // Another timeout, to wait for the fade out to finish
-                replaceById(id, feedback, 0);
-                document.getElementById(id).style.opacity = 1;
-
-                if (useOnMode) {
-                    $("#cancelUseOn").one("click", function () {
-                        deactivateUseOnMode(true);
-                    });
-                }
-
-                if (!persist) {
-                    setTimeout(function () {
-                        // Fade out when the time is up
-                        document.getElementById(id).style.opacity = 0;
-                        feedbackActive = false;
-                    }, feedbackTime);
-                }
-            }, delay);
-
-        }, delay);
+        }, feedbackTime);
     }
 };
 
@@ -330,7 +344,7 @@ const compositFeedback = function (feedback) {
     }
 
     if (anyFeedback) {
-        showFeedback(allFeedback);
+        addFeedback(allFeedback);
     }
 
 };
@@ -396,7 +410,7 @@ export {
     fadeTime,
     changeBg,
     setBgSize,
-    showFeedback,
+    addFeedback,
     clearFeedback,
     changeContainerClass,
     compositFeedback,

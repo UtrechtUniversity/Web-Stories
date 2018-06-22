@@ -1,4 +1,4 @@
-import {showFeedback} from "./display.js";
+import {addFeedback} from "./display.js";
 import {menuTracker, openMenu, refreshMenu, useOnMode} from "./menu.js";
 import {
     change,
@@ -143,7 +143,7 @@ class SuperObj {
                 if (checkConditions(definedSrc.conditions, true)) {
                     // Execute consequences
                     change(definedSrc.consequences);
-                    showFeedback(definedSrc.feedback);
+                    addFeedback(definedSrc.feedback);
                 }
                 break;
             }
@@ -151,7 +151,7 @@ class SuperObj {
         }
 
         if (!found) {
-            showFeedback("Can't use " + source + " on " + this.name);
+            addFeedback("Can't use " + source + " on " + this.name);
         }
     }
 }
@@ -230,7 +230,7 @@ class Npc extends SuperObj {
                     openMenu(player.location);
                 }
 
-                showFeedback(interaction.feedback);
+                addFeedback(interaction.feedback);
 
                 // Remove interaction
                 this.interactions.splice(index, 1);
@@ -415,7 +415,7 @@ class Obj extends SuperObj {
                 useOnMode(this.name);
             }
 
-            showFeedback(interaction.feedback);
+            addFeedback(interaction.feedback);
         }
 
     }

@@ -20,7 +20,7 @@ import {
     setBgSize,
     setFadeTime,
     setFeedbackTime,
-    showFeedback,
+    addFeedback,
     compositFeedback,
     toggleFullscreen
 } from "./display.js";
@@ -145,7 +145,7 @@ const enterLocation = function (newLoc) {
     /* Check if the new location isn't locked, cause if it is,
     we ain't gonna do it. */
     if (newLocRef.accessMsg !== "unlocked") {
-        showFeedback(newLocRef.accessMsg);
+        addFeedback(newLocRef.accessMsg);
     } else {
 
         // We will have to leave 'object' mode when entering a new location

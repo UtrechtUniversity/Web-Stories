@@ -143,6 +143,10 @@
                         "accessMsg": "unlocked"
                     },
                     {
+                        "type": "playSound",
+                        "url": "Bleep.mp3"
+                    },
+                    {
                         "type": "fadeOut",
                         "id": "keyText"
                     }

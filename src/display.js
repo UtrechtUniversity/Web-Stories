@@ -317,7 +317,7 @@ const clearFeedback = function (clearMain, clearMenu) {
         document.getElementById("menu_feedback").style.opacity = 0;
     }
 
-    feedbackActive = false;
+    feedbackQueue = [];
 };
 
 const compositFeedback = function (feedback) {

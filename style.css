@@ -1,3 +1,5 @@
+/* The default styling is for mobile. Desktop specific styling
+   can be found at the bottom */
 html {
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
@@ -88,10 +90,16 @@ header #inventoryBtn:hover {
     cursor: pointer;
 }
 
-header #soundBtn, header #fsBtn {
+header #soundBtn {
     display: inline-block;
     width: 32px;
     height: 32px;
+}
+
+header #fsBtn {
+    /* Fullscreen button will only be
+    displayed on desktop */
+    display: none;
 }
 
 header .sound_on {
@@ -294,6 +302,12 @@ ul, li{
     #menu_container {
         font-size: 1.2em;
         height: 80%;
+    }
+
+    header #fsBtn {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
     }
 
 }

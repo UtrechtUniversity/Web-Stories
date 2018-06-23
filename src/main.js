@@ -494,8 +494,13 @@ const startStory = function () {
     // Add clickable functions for sound button
     $("#soundBtn").click(muteSound);
 
-    // Add clickable function for fullscreen button
-    $("#fsBtn").click(toggleFullscreen);
+    if (init.enableFSButton) {
+        // Add clickable function for fullscreen button
+        $("#fsBtn").removeClass("hide");
+        $("#fsBtn").addClass("fs_enter");
+        $("#fsBtn").click(toggleFullscreen);
+    }
+
 
     document.getElementById("storyTitle").style.display = "none";
     document.querySelector("header").style.opacity = 1;
@@ -973,7 +978,7 @@ const change = function (changeArray) {
             }
             break;
 
-        case "playSound": 
+        case "playSound":
             // REQUIRED: url
             if (
                 changeObj.url !== undefined &&

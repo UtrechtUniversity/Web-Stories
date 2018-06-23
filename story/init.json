@@ -5,6 +5,7 @@
     "debugStats": true,
     "muteSound": false,
     "enableInventory": true,
+    "enableFSButton": false,
     "devAutoStart": false,
     "bgSize": "cover",
     "startLocation": "locAptLivingRoom",

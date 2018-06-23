@@ -15,68 +15,133 @@ sound.howl (is a Howl object)
 let soundMuted = false;
 let allTracks = [];
 let allSounds = [];
-let trackQueue = [];
+let playbackQueue = [];
 let currentTrack = {
-    filename: "no_sound"
+    filename: "no_sound",
+    howl: null
 };
 let prevTrack = {
-    filename: "no_sound"
+    filename: "no_sound",
+    howl: null
 };
-let isPlayingAudio = false;
+let nextTrack = {
+    filename: "no_sound",
+    howl: null
+
+}
+let playback = "stopped";
+let prevAction = "none";
 let fadeTime = 1000;
 
-const crossfadeSound = function () {
-    if (!soundMuted) {
+const changePlayback = function () {
+    // At this point there will only be 1 item in the queue
+    let type = playbackQueue[0];
+    let thisFadeTime = fadeTime;
+
+    if (
+        playback === "stopped" &&
+        prevAction !== "fadein" && (
+        (type === "fadein") ||
+        (type === "crossfade" && prevTrack.filename === "no_sound")
+        )
+    ) {
+        // Fade in
+        playback = "fading";
+        prevAction = "fadein";
+        currentTrack.howl.volume(0);
         currentTrack.howl.play();
-    }
+        currentTrack.howl.fade(0, 1, fadeTime);
 
-    prevTrack.howl.fade(1, 0, fadeTime);
-    currentTrack.howl.fade(0, 1, fadeTime);
+        $("#soundInfo").text("playing " + currentTrack.filename);
 
-    setTimeout(function () {
-        prevTrack.howl.pause();
-    }, fadeTime);
-};
-
-const fadeSoundIn = function () {
-    currentTrack.howl.volume(0);
-    currentTrack.howl.play();
-    currentTrack.howl.fade(0, 1, fadeTime);
-
-    $("#soundInfo").text("playing " + currentTrack.filename);
-
-    isPlayingAudio = true;
-};
-
-const fadeSoundOut = function () {
-    /* thisTrack prevents weird behaviour
-    in the setTimeout, because currentTrack
-    can be something completely different
-    once it passes */
-    let thisTrack = currentTrack;
-
-    $("#soundInfo").text("fading out");
-
-    if (thisTrack.filename !== "no_sound") {
-
-        thisTrack.howl.fade(1, 0, fadeTime);
         setTimeout(function () {
-
-            thisTrack.howl.pause();
-            $("#soundInfo").text("playback paused");
+            playback = "playing";
         }, fadeTime);
+
+    } else if (
+        playback === "playing" &&
+        prevAction !== "fadeout" &&
+        type === "fadeout"
+    ) {
+        // Fade out
+        /* thisTrack prevents weird behaviour
+        in the timeout, because currentTrack
+        can be something completely different
+        once the timeout has passed */
+        let thisTrack = currentTrack;
+        playback = "fading";
+        prevAction = "fadeout";
+
+        $("#soundInfo").text("fading out");
+
+        if (thisTrack.filename !== "no_sound") {
+            thisTrack.howl.fade(1, 0, fadeTime);
+
+            setTimeout(function () {
+                thisTrack.howl.pause();
+                playback = "stopped";
+
+                $("#soundInfo").text("playback paused");
+            }, fadeTime);
+        }
+
+    } else if (playback === "playing" && type === "crossfade") {
+        // Crossfade
+        playback = "fading";
+        prevAction = "crossfade";
+        $("#soundInfo").text("crossfading");
+
+        if (!soundMuted) {
+            nextTrack.howl.play();
+        }
+
+        prevTrack.howl.fade(1, 0, fadeTime);
+        nextTrack.howl.fade(0, 1, fadeTime);
+
+        setTimeout(function () {
+            prevTrack.howl.pause();
+            playback = "playing";
+            $("#soundInfo").text("playing " + currentTrack.filename);
+        }, fadeTime);
+
+    } else if (type === "update") {
+        // Only update (happens when sound is muted)
+        thisFadeTime = 0;
     }
 
-    isPlayingAudio = false;
+    currentTrack = nextTrack;
+
+    // Wait for fades to end
+    setTimeout(function () {
+        // Job done
+        let amnt = playbackQueue.length;
+        let amntToRemove = 1;
+
+        /* If there is only 1 item in the queue, remove it, because
+        we just ran that job. When there are more than 1, then remove
+        all of them, except last one. Then trigger this function again. */
+        if (amnt > 1) {
+            amntToRemove = amnt - 1;
+        }
+
+        playbackQueue.splice(0, amntToRemove);
+        console.log("removed " + amntToRemove + " items from queue");
+
+        if (playbackQueue.length > 0) {
+            changePlayback();
+        }
+
+    }, thisFadeTime);
 };
 
 const requestPlaybackChange = function (type) {
-    if (type === "fadein") {
-        fadeSoundIn();
-    } else if (type === "fadeout") {
-        fadeSoundOut();
-    } else if (type === "crossfade") {
-        crossfadeSound();
+    // Add job to playbackQueue
+    playbackQueue.push(type);
+    console.log("Added to playbackQueue. Job = " + type);
+    console.log("Items in queue: " + playbackQueue.length);
+
+    if (playbackQueue.length === 1) {
+        changePlayback();
     }
 };
 
@@ -84,24 +149,12 @@ const playTrack = function (newTrack) {
     // This function assumes the track has been loaded!
 
     prevTrack = currentTrack;
-    currentTrack = newTrack;
+    nextTrack = newTrack;
 
     $("#soundInfo").text("track changed: " + newTrack.filename);
 
-    if (
-        !soundMuted && prevTrack.filename !== newTrack.filename &&
-        prevTrack.filename !== "no_sound"
-    ) {
+    if (!soundMuted) {
         requestPlaybackChange("crossfade");
-    } else if (
-        !soundMuted && prevTrack.filename !== newTrack.filename &&
-        prevTrack.filename === "no_sound"
-    ) {
-        // No track is playing, so just fade in.
-        $("#soundInfo").text("fade in");
-        requestPlaybackChange("fadein");
-    } else if (soundMuted && prevTrack.filename !== newTrack.filename) {
-       $("#soundInfo").text("sound is muted, only updated currentTrack");
     }
 
 };
@@ -142,26 +195,23 @@ const changeTrack = function (newSnd) {
                 }
             } else if (found && soundMuted) {
                 // Only update currentTrack
-                currentTrack = allTracks[trackNr];
+                nextTrack = allTracks[trackNr];
+                requestPlaybackChange("update");
             }
 
         } else {
-            /* Just stop playing the current track if the new location
-            has "no_sound", unless sound was muted already! */
+            /* Just fade out current track if the new location
+            has "no_sound", unless sound is muted */
+            nextTrack = {
+                filename: "no_sound",
+                howl: null
+            };
 
             if (!soundMuted) {
                 requestPlaybackChange("fadeout");
             }
 
-            // Wait until fade out is complete before changing the currentTrack
-            setTimeout(function () {
-                currentTrack = {
-                    filename: "no_sound",
-                    audioElement: null
-                };
-                updateDebugStats();
-                $("#soundInfo").text("playback stopped");
-            }, fadeTime);
+            updateDebugStats();
         }
     }
 };
@@ -261,8 +311,10 @@ const setAudioFadeTime = function (newFadeTime) {
 };
 
 const setCurrentTrack = function (track) {
+    // This function will run at the beginning and makes sure
+    // everything is properly set to this track.
     currentTrack = track;
-    isPlayingAudio = true;
+    playback = "playing";
     $("#soundInfo").text("playing: " + currentTrack.filename);
 };
 
@@ -366,7 +418,6 @@ const playSound = function (i) {
 
 export default "loaded";
 export {
-    isPlayingAudio,
     changeTrack,
     initAudio,
     muteSound,
@@ -376,5 +427,6 @@ export {
     getAudioTrack,
     createSoundObj,
     loadSound,
-    playSound
+    playSound,
+    playback
 };

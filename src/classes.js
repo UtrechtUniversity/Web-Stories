@@ -26,7 +26,7 @@ class Location {
         this.scenes = scenes;
         this.content = content;
         this.styling = styling;
-        this.visited = false;
+        this.visited = 0;
 
         LocationList.set(locID, this);
         return this;
@@ -60,7 +60,7 @@ class Location {
     }
 
     visit () {
-        this.visited = true;
+        this.visited += 1;
     }
 
     getVisited () {

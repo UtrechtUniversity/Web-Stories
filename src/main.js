@@ -32,7 +32,7 @@ import {
     menuTracker,
     openInventory
 } from "./menu.js";
-import {parse, parseLocation} from "./parse.js";
+import {parseLocation} from "./parse.js";
 import {
     disableChoice,
     recordSceneChange,
@@ -57,6 +57,7 @@ let initLoaded = false;
 let init;
 let waitUntilLoaded;
 let firstAudioTrack;
+let locationQueue = [];
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
 
@@ -132,7 +133,37 @@ const loadScene = function (url) {
     });
 };
 
-const enterLocation = function (newLoc) {
+const requestLocChange = function (newLoc) {
+    /* This is a queue-system to prevent strange things from happening when a
+        user clicks really fast (or clicks the same location button multiple
+        times before it has faded out) */
+    let newLocRef = LocationList.get(newLoc);
+    if (newLocRef instanceof Location) {
+        if (newLocRef.accessMsg !== "unlocked") {
+            // Don't enter location when it's locked
+            addFeedback(newLocRef.accessMsg);
+        } else {
+            // Add to locationQueue, unless it's there already
+            if (locationQueue.length > 0) {
+                let lastIndex = locationQueue.length -1;
+                if (locationQueue[lastIndex] !== newLoc) {
+                    locationQueue.push(newLoc);
+                    console.log("2 Queue count is " + locationQueue.length);
+                } else {
+                    console.log("Location's the same");
+                }
+            } else {
+                console.log("Add to queue. Count is " + locationQueue.length);
+                locationQueue.push(newLoc);
+                enterLocation();
+            }
+        }
+    } else {
+        logError("location with ID '" + newLoc + "' not found");
+    }
+};
+
+const enterLocation = function () {
 
     /* Entering a new location. Prioritization:
         1. When a cutscene is present: play it.
@@ -140,162 +171,175 @@ const enterLocation = function (newLoc) {
         3. If neither is the case: show location content */
 
     updateDebugStats();
+    let newLoc = locationQueue[0];
     let newLocRef = LocationList.get(newLoc);
 
-    /* Check if the new location isn't locked, cause if it is,
-    we ain't gonna do it. */
-    if (newLocRef.accessMsg !== "unlocked") {
-        addFeedback(newLocRef.accessMsg);
-    } else {
+    // We will have to leave 'object' mode when entering a new location
+    player.inObject = false;
 
-        // We will have to leave 'object' mode when entering a new location
-        player.inObject = false;
+    if (menuActive) {
+        hideMenu();
+    }
 
-        if (menuActive) {
-            hideMenu();
+    // Change background image
+    changeBg(newLocRef);
+
+    // Change audio track
+    changeTrack(newLocRef.locSnd);
+
+    if (newLocRef.name !== "In scene") {
+        player.locationNext = newLoc;
+    }
+
+    player.locationPrev = player.location;
+    player.location = newLoc;
+    player.inScene = false;
+    // set loc.visited to 'true'
+    newLocRef.visit();
+
+    // 1 - Check if a cutscene needs to be played and if so: play it.
+    let sceneName;
+    let sceneTriggered = false;
+    let sceneList = Object.keys(newLocRef.cutscenes);
+    let j = 0;
+
+    while (j < sceneList.length && !sceneTriggered) {
+        sceneName = sceneList[j];
+
+        if (newLocRef.cutscenes[sceneName]) {
+            // Deactivate this cutscene
+            newLocRef.cutscenes[sceneName] = false;
+
+            // Play scene
+            playCutscene("story/scenes/" + sceneName + ".json");
+
+            sceneTriggered = true;
         }
+        j += 1;
+    }
 
-        // Change background image
-        changeBg(newLocRef);
+    /* 2 - Check every scene in the location object to see if any scene
+    is set to 'true'. As soon as one is found: start it. */
+    sceneList = Object.keys(newLocRef.scenes);
+    j = 0;
 
-        // Change audio track
-        changeTrack(newLocRef.locSnd);
+    while (j < sceneList.length && !sceneTriggered) {
+        sceneName = sceneList[j];
 
-        if (newLocRef.name !== "In scene") {
-            player.locationNext = newLoc;
+        if (newLocRef.scenes[sceneName]) {
+            // Deactivate this scene
+            newLocRef.scenes[sceneName] = false;
+
+            // Load scene
+            loadScene("story/scenes/" + sceneName + ".json");
+
+            sceneTriggered = true;
         }
+        j += 1;
+    }
 
-        player.locationPrev = player.location;
-        player.location = newLoc;
+    // 3 - Display Location content
+    if (!sceneTriggered) {
+
+        /*
+        parseLocation returns an array with this
+        layout:
+            [
+                {
+                    section: "sectionHTML",
+                    delay: delayTime (optional)
+                }
+            ]
+        */
+        let locContent = parseLocation(newLocRef.content);
+
         player.inScene = false;
-        // set loc.visited to 'true'
-        newLocRef.visit();
 
-        // 1 - Check if a cutscene needs to be played and if so: play it.
-       let sceneName;
-       let sceneTriggered = false;
-       let sceneList = Object.keys(newLocRef.cutscenes);
-       let j = 0;
+        // Fade out everything
+        fadeOut("text");
+        fadeOut("choices");
 
-       while (j < sceneList.length && !sceneTriggered) {
-           sceneName = sceneList[j];
+        /* Replace content & choices.
+        The timeout is because we have to wait for the
+        fade out to finish */
+        setTimeout(function () {
 
-           if (newLocRef.cutscenes[sceneName]) {
-               // Deactivate this cutscene
-               newLocRef.cutscenes[sceneName] = false;
+            let compositHTML = "";
+            let delayArray = [];
+            let delayNr = 0;
+            let delayID;
 
-               // Play scene
-               playCutscene("story/scenes/" + sceneName + ".json");
+            /* Display all sections, wrap delays in Divs, and
+            afterwards select these Divs and set opacity to 1; */
+            locContent.forEach(function (section) {
 
-               sceneTriggered = true;
-           }
-           j += 1;
-       }
+                if (section.delay !== undefined && section.delay > 0) {
 
-        /* 2 - Check every scene in the location object to see if any scene
-        is set to 'true'. As soon as one is found: start it. */
-        sceneList = Object.keys(newLocRef.scenes);
-        j = 0;
+                    delayID = "delay_" + delayNr;
 
-        while (j < sceneList.length && !sceneTriggered) {
-            sceneName = sceneList[j];
+                    section.sectionHTML = "<div id=\"" + delayID +
+                    "\" class=\"waitForFade\">" + section.sectionHTML +
+                    "</div>";
 
-            if (newLocRef.scenes[sceneName]) {
-                // Deactivate this scene
-                newLocRef.scenes[sceneName] = false;
+                    delayArray.push(section.delay);
 
-                // Load scene
-                loadScene("story/scenes/" + sceneName + ".json");
+                    delayID += 1;
 
-                sceneTriggered = true;
-            }
-            j += 1;
-        }
+                }
 
-        // 3 - Display Location content
-        if (!sceneTriggered) {
+                compositHTML += section.sectionHTML;
+            });
 
-            /*
-            parseLocation returns an array with this
-            layout:
-                [
-                    {
-                        section: "sectionHTML",
-                        delay: delayTime (optional)
+            replaceById("text", compositHTML, 0, newLoc);
+            createButtons();
+            fadeIn("text");
+            fadeIn("choices");
+
+            // Go through delayArray to fade in sections
+            delayNr = 0;
+            delayArray.forEach (function (delayTime) {
+                /* Important: the delayNr that's included in the delayID matches the index of the times in the delayArray.
+                In other words: delayArray[0] contains the delay time
+                (in milliseconds) that corresponds with
+                <div id="delay_0">
+                */
+                let i = delayNr;
+                let locBeforeTimeout = newLoc;
+                let visitCountBeforeTimeout = newLocRef.getVisited();
+
+                setTimeout(function () {
+                    /* We need to check if the location didn't change
+                    during the timeout and if player didn't re-enter the same
+                    location */
+                    if (
+                        player.location === locBeforeTimeout &&
+                        visitCountBeforeTimeout === newLocRef.getVisited()
+                    ) {
+                        document.getElementById(
+                            "delay_" + i
+                        ).style.opacity = 1;
                     }
-                ]
-            */
-            let locContent = parseLocation(newLocRef.content);
+                }, delayTime);
+                delayNr += 1;
+            });
 
-            player.inScene = false;
-
-            // Fade out everything
-            fadeOut("text");
-            fadeOut("choices");
-
-            /* Replace content & choices.
-            The timeout is because we have to wait for the
-            fade out to finish */
+            // Wait till fade-ins are done
             setTimeout(function () {
+                // Remove from locationQueue, fire next one if there is.
+                locationQueue.splice(0, 1);
+                let amnt = locationQueue.length;
+                console.log("Removed from queue. Count is " + locationQueue.length);
 
-                let compositHTML = "";
-                let delayArray = [];
-                let delayNr = 0;
-                let delayID;
-
-                /* Display all sections, wrap delays in Divs, and
-                afterwards select these Divs and set opacity to 1; */
-                locContent.forEach(function (section) {
-
-                    if (section.delay !== undefined && section.delay > 0) {
-
-                        delayID = "delay_" + delayNr;
-
-                        section.sectionHTML = "<div id=\"" + delayID +
-                        "\" class=\"waitForFade\">" + section.sectionHTML +
-                        "</div>";
-
-                        delayArray.push(section.delay);
-
-                        delayID += 1;
-
+                if (amnt > 0) {
+                    // If more than 1 location is queued, remove all except last
+                    if (amnt > 1) {
+                        let amntToRemove = amnt - 1;
+                        locationQueue.splice(0, amntToRemove);
                     }
-
-                    compositHTML += section.sectionHTML;
-                });
-
-                replaceById("text", compositHTML, 0, newLoc);
-
-                createButtons();
-
-                fadeIn("text");
-                fadeIn("choices");
-
-                // Go through delayArray to fade in sections
-                delayNr = 0;
-                delayArray.forEach (function (delayTime) {
-                    /* Important: the delayNr that's included in the delayID matches the index of the times in the delayArray.
-                    In other words: delayArray[0] contains the delay time
-                    (in milliseconds) that corresponds with
-                    <div id="delay_0">
-                    */
-                    let i = delayNr;
-                    let locBeforeTimeout = newLoc;
-
-                    setTimeout(function () {
-                        /* We need to check if the location didn't change
-                        during the timeout */
-                        if (player.location === locBeforeTimeout) {
-                            document.getElementById(
-                                "delay_" + i
-                            ).style.opacity = 1;
-                        }
-                    }, delayTime);
-                    delayNr += 1;
-                });
-
+                    enterLocation();
+                }
             }, fadeTime);
-        }
+        }, fadeTime);
     }
     updateDebugStats();
 };
@@ -514,7 +558,7 @@ const startStory = function () {
 
     setTimeout(function () {
         /*
-        enterLocation does a fadeOut & fadeIn of #text and #choices,
+        requestLocChange does a fadeOut & fadeIn of #text and #choices,
         but since we want a nicer, slower fade out and in of the
         title screen we have to do that on the entire #container.
         The fadeOut already happened after the click event.
@@ -522,7 +566,7 @@ const startStory = function () {
         fadeIn("container", slowerFadeTime);
     }, fadeTime);
 
-    enterLocation(startLoc);
+    requestLocChange(startLoc);
 };
 
 const directAction = function (obj) {
@@ -707,8 +751,8 @@ const checkConditions = function (condList, displayFeedback = true) {
                 ) {
                     // Both loc.visited & value need to be either true or false
                     if (
-                        (objRef.getVisited() && value) ||
-                        (!objRef.getVisited() && !value)
+                        (objRef.getVisited() > 0 && value) ||
+                        (!objRef.getVisited() === 0 && !value)
                     ) {
                         checkArray.push(true);
                     } else {
@@ -816,9 +860,9 @@ const change = function (changeArray) {
                 locRef !== undefined &&
                 locRef instanceof Location
             ) {
-                enterLocation(changeObj.loc);
+                requestLocChange(changeObj.loc);
                 /* recordSceneChange prevents the ending of a scene
-                from also triggering enterLocation() */
+                from also triggering requestLocChange() */
                 recordSceneChange();
                 success = true;
             }
@@ -1208,7 +1252,7 @@ $(document).ready(function () {
 export default "Main Story Module";
 export {
     player,
-    enterLocation,
+    requestLocChange,
     refreshLocation,
     loadScene,
     directAction,

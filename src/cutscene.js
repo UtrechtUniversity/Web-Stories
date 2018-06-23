@@ -3,7 +3,7 @@ import {LocationList} from "./classes.js";
 import {
     changeContainerClass, replaceById, fadeIn, fadeOut, fadeTime
 } from "./display.js";
-import {enterLocation, player} from "./main.js";
+import {requestLocChange, player} from "./main.js";
 
 const startCutscene = function (eventArray) {
 
@@ -94,7 +94,7 @@ const triggerEvent = function (event, eventArray) {
         }
 
         /* 3. Wait for fades to end, then fire next one in line, or if this
-           is the last one, then enterLocation. */
+           is the last one, then requestLocChange. */
         setTimeout (function () {
             let currentIndex = eventArray.indexOf(event);
             let lastIndex = eventArray.length - 1;
@@ -106,7 +106,7 @@ const triggerEvent = function (event, eventArray) {
                 let playerLocRef = LocationList.get(player.location);
 
                 if (playerLocRef.name === "In scene") {
-                    enterLocation(player.locationNext);
+                    requestLocChange(player.locationNext);
                 }
             }
         }, event.outAnim);

@@ -1,4 +1,4 @@
-import {change, checkConditions, enterLocation, player, updateDebugStats}
+import {change, checkConditions, requestLocChange, player, updateDebugStats}
     from "./main.js";
 import {
     fadeIn,
@@ -189,7 +189,7 @@ const advanceScene = function (c) {
             let playerLocRef = LocationList.get(player.location);
 
             if (playerLocRef.name === "In scene") {
-                enterLocation(player.locationNext);
+                requestLocChange(player.locationNext);
             }
         }
 

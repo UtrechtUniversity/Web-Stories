@@ -1,7 +1,7 @@
 import {
     change,
     directAction,
-    enterLocation,
+    requestLocChange,
     player,
     refreshLocation,
     updateDebugStats,
@@ -558,7 +558,7 @@ const createButtons = function () {
         if (type === "changeLoc") {
             $("#" + thisID).click(function () {
                 deactivateUseOnMode();
-                enterLocation(objID);
+                requestLocChange(objID);
             });
         } else if (type === "advanceScene") {
             $("#" + thisID).one("click", function () {

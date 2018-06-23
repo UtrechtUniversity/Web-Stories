@@ -148,12 +148,9 @@ const requestLocChange = function (newLoc) {
                 let lastIndex = locationQueue.length -1;
                 if (locationQueue[lastIndex] !== newLoc) {
                     locationQueue.push(newLoc);
-                    console.log("2 Queue count is " + locationQueue.length);
                 } else {
-                    console.log("Location's the same");
                 }
             } else {
-                console.log("Add to queue. Count is " + locationQueue.length);
                 locationQueue.push(newLoc);
                 enterLocation();
             }

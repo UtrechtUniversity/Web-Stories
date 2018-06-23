@@ -325,19 +325,23 @@ const enterLocation = function () {
 
             // Wait till fade-ins are done
             setTimeout(function () {
-                // Remove from locationQueue, fire next one if there is.
-                locationQueue.splice(0, 1);
+                // Entering location done
                 let amnt = locationQueue.length;
-                console.log("Removed from queue. Count is " + locationQueue.length);
+                let amntToRemove = 1;
 
-                if (amnt > 0) {
-                    // If more than 1 location is queued, remove all except last
-                    if (amnt > 1) {
-                        let amntToRemove = amnt - 1;
-                        locationQueue.splice(0, amntToRemove);
-                    }
+                /* If there is only 1 item in the queue, remove it, because
+                we just ran that job. When there are more than 1, then remove
+                all of them, except last one. Then trigger this function again. */
+                if (amnt > 1) {
+                    amntToRemove = amnt - 1;
+                }
+
+                locationQueue.splice(0, amntToRemove);
+
+                if (locationQueue.length > 0) {
                     enterLocation();
                 }
+
             }, fadeTime);
         }, fadeTime);
     }

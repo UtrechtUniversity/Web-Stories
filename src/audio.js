@@ -15,14 +15,30 @@ sound.howl (is a Howl object)
 let soundMuted = false;
 let allTracks = [];
 let allSounds = [];
+let trackQueue = [];
 let currentTrack = {
+    filename: "no_sound"
+};
+let prevTrack = {
     filename: "no_sound"
 };
 let isPlayingAudio = false;
 let fadeTime = 1000;
 
-const fadeSoundIn = function () {
+const crossfadeSound = function () {
+    if (!soundMuted) {
+        currentTrack.howl.play();
+    }
 
+    prevTrack.howl.fade(1, 0, fadeTime);
+    currentTrack.howl.fade(0, 1, fadeTime);
+
+    setTimeout(function () {
+        prevTrack.howl.pause();
+    }, fadeTime);
+};
+
+const fadeSoundIn = function () {
     currentTrack.howl.volume(0);
     currentTrack.howl.play();
     currentTrack.howl.fade(0, 1, fadeTime);
@@ -30,7 +46,6 @@ const fadeSoundIn = function () {
     $("#soundInfo").text("playing " + currentTrack.filename);
 
     isPlayingAudio = true;
-
 };
 
 const fadeSoundOut = function () {
@@ -55,44 +70,38 @@ const fadeSoundOut = function () {
     isPlayingAudio = false;
 };
 
-const playTrack = function (newTrack) {
+const requestPlaybackChange = function (type) {
+    if (type === "fadein") {
+        fadeSoundIn();
+    } else if (type === "fadeout") {
+        fadeSoundOut();
+    } else if (type === "crossfade") {
+        crossfadeSound();
+    }
+};
 
+const playTrack = function (newTrack) {
     // This function assumes the track has been loaded!
 
-    let prevTrack = currentTrack;
+    prevTrack = currentTrack;
     currentTrack = newTrack;
-    if (!soundMuted) {
-        currentTrack.howl.play();
-    }
 
     $("#soundInfo").text("track changed: " + newTrack.filename);
-
-    console.log("Starting playback for " + currentTrack.filename);
 
     if (
         !soundMuted && prevTrack.filename !== newTrack.filename &&
         prevTrack.filename !== "no_sound"
     ) {
-        // There's a track playing and we need to crossfade into the new one
-        prevTrack.howl.fade(1, 0, fadeTime);
-        currentTrack.howl.fade(0, 1, fadeTime);
-
-        setTimeout(function () {
-            prevTrack.howl.pause();
-        }, 2000);
-
+        requestPlaybackChange("crossfade");
     } else if (
         !soundMuted && prevTrack.filename !== newTrack.filename &&
         prevTrack.filename === "no_sound"
     ) {
         // No track is playing, so just fade in.
         $("#soundInfo").text("fade in");
-
-        fadeSoundIn();
+        requestPlaybackChange("fadein");
     } else if (soundMuted && prevTrack.filename !== newTrack.filename) {
-
        $("#soundInfo").text("sound is muted, only updated currentTrack");
-
     }
 
 };
@@ -141,7 +150,7 @@ const changeTrack = function (newSnd) {
             has "no_sound", unless sound was muted already! */
 
             if (!soundMuted) {
-                fadeSoundOut(currentTrack);
+                requestPlaybackChange("fadeout");
             }
 
             // Wait until fade out is complete before changing the currentTrack
@@ -160,7 +169,7 @@ const changeTrack = function (newSnd) {
 const initAudio = function (preloadAudio) {
     /* This function takes all soundfiles from the locations, creates
     Howler objects for every sound, preloads the ones from preLoadAudio,
-    and then puts the audio objects in the allTracks array*/
+    and then puts the audio objects in the allTracks array */
     LocationList.forEach(function (loc) {
 
         let toPreload = false;
@@ -222,11 +231,11 @@ const muteSound = function () {
         soundMuted = false;
         if (currentTrack.filename !== "no_sound") {
             if (currentTrack.howl.state() === "loaded") {
-                fadeSoundIn();
+                requestPlaybackChange("fadein");
             } else {
                 currentTrack.howl.load();
                 currentTrack.howl.once("load", function () {
-                    fadeSoundIn();
+                    requestPlaybackChange("fadein");
                 });
             }
 
@@ -238,7 +247,7 @@ const muteSound = function () {
         // Mute
         soundMuted = true;
         if (currentTrack.filename !== "no_sound") {
-            fadeSoundOut();
+            requestPlaybackChange("fadeout");
         }
         $("#soundBtn").removeClass("sound_on");
         $("#soundBtn").addClass("sound_off");

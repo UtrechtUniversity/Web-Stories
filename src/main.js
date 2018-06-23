@@ -335,7 +335,7 @@ const enterLocation = function () {
 
                 locationQueue.splice(0, amntToRemove);
 
-                if (locationQueue.length > 0) {
+                if (locationQueue.length > 0 && locationQueue[0] !== newLoc) {
                     enterLocation();
                 }
 

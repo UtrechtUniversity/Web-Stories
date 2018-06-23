@@ -251,8 +251,7 @@ const addFeedback = function (feedback, persist = false, useOnMode = false) {
         typeof feedback === "string" &&
         feedback !== ""
     ) {
-        /* If another item is being displayed: add this feedback to the
-        feedbackQueue. This message will then automatically be shown once the
+        /* Add this feedback to the feedbackQueue. If another item is being displayed, then this message will automatically be shown once the
         other message finishes. Do not add to feedbackQueue if this message is
         in the queue already (to prevent many of the same messages from
         stacking, in case player clicks multiple times on something that fires
@@ -361,8 +360,8 @@ const setFeedbackTime = function (newFeedbackTime) {
 const toggleFullscreen = function () {
     if (
         !fullscreen && (
-        document.fullscreenEnabled || 
-        document.webkitFullscreenEnabled || 
+        document.fullscreenEnabled ||
+        document.webkitFullscreenEnabled ||
         document.mozFullScreenEnabled ||
         document.msFullscreenEnabled
         )

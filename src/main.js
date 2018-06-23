@@ -699,8 +699,17 @@ const checkConditions = function (condList, displayFeedback = true) {
                 break;
 
             case "visited":
-                if (objRef !== "no_location") {
-                    if (objRef.getVisited()) {
+                // Required: loc, value
+                if (
+                    objRef !== "no_location" &&
+                    value !== undefined &&
+                    typeof value === "boolean"
+                ) {
+                    // Both loc.visited & value need to be either true or false
+                    if (
+                        (objRef.getVisited() && value) ||
+                        (!objRef.getVisited() && !value)
+                    ) {
                         checkArray.push(true);
                     } else {
                         checkArray.push(false);

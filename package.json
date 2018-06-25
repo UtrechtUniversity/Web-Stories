@@ -1,6 +1,6 @@
 {
   "name": "nightswim",
-  "version": "0.9.4",
+  "version": "1.0.0-rc",
   "description": "interactive storytelling engine",
   "main": "index.html",
   "directories": {

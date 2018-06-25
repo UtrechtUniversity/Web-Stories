@@ -7,6 +7,7 @@ import {requestLocChange, player} from "./main.js";
 
 const startCutscene = function (eventArray) {
 
+    player.upEventID();
     fadeOut("text", fadeTime);
     fadeOut("choices", fadeTime);
 

@@ -15,14 +15,12 @@ import {
 import {LocationList} from "./classes.js";
 import {parse} from "./parse.js";
 
-let sceneChanged = false;
-let cList = {};
+/* The scene system is the only system that doesn't use a queue-system
+for stacking jobs, because every button in a scene gets a "once" event
+handler, which makes it impossible for the player to trigger multiple
+events at once by clicking rapidly. */
 
-const recordSceneChange = function () {
-    /* To keep track of when a scene has triggered the start of another
-    scene (in a consequence) */
-    sceneChanged = true;
-};
+let cList = {};
 
 const disableChoice = function (c) {
     if (
@@ -38,23 +36,23 @@ const disableChoice = function (c) {
 };
 
 const advanceScene = function (c) {
-    /* This function runs every time when a player clicks a button during a
-    scene. c = the choice the player has just made */
+    /* This function runs every time a player clicks a button during a
+    scene. c = the choice the player has just made. */
+
     let responseList;
     let responseFound = false;
     let responseMsgFound = false;
     let selectedResponse;
+    let thisEventID = player.eventID;
     updateDebugStats();
 
     if (menuActive) {
-
         /*
         Hide menu BEFORE changing player.inScene value, because else you
         will stay inside the object and then you won't return to the correct
         location afterwards...
         */
         hideMenu();
-
     }
 
     player.inScene = true;
@@ -62,156 +60,129 @@ const advanceScene = function (c) {
     fadeOut("text");
     fadeOut("choices");
 
-    // ===============RESPONSES===============
-    responseList = cList[c].responses;
+    /* CONSEQUENCES
+    Every item in the consequences list is an object with a type,
+    obj and amnt, and sometimes feedback. */
+    let changeArray = cList[c].consequences;
+    change(changeArray);
 
-    if (responseList.length > 0) {
+    /* Consequences might have triggered a scene or location change!
+    Do not proceed if any of that happened. Check is done by recording
+    the eventID in thisEventID at the beginning of this function. */
+    if (player.eventID === thisEventID) {
 
-        // Check every response to see if it meets the conditions
-        let j = 0;
-        let cond;
+        // RESPONSES
+        responseList = cList[c].responses;
 
-        while (j < responseList.length && !responseFound) {
+        if (responseList.length > 0) {
 
-            cond = responseList[j].conditions;
+            // Check every response to see if it meets the conditions
+            let j = 0;
+            let cond;
 
-            if (cond !== undefined) {
-                if (checkConditions(cond, false)) {
-                    /*
-                    Conditions of this response are met: use this one
-                    ELSE proceed with next response to see if that one meets
-                    the conditions
-                    */
-                    selectedResponse = responseList[j];
+            while (j < responseList.length && !responseFound) {
+
+                cond = responseList[j].conditions;
+
+                if (cond !== undefined) {
+                    if (checkConditions(cond, false)) {
+                        /*
+                        When conditions of this response are met: use this
+                        response, ELSE proceed with next response to see if
+                        that one meets the conditions
+                        */
+                        selectedResponse = responseList[j];
+                        responseFound = true;
+                    }
+                } else {
+                    // No conditions for this response, so we can use it.
                     responseFound = true;
                 }
-            } else {
-                // No conditions for this response, so we can use it.
-                responseFound = true;
+                j += 1;
             }
-            j += 1;
-        }
 
-        if (responseFound) {
-            // Print the response on screen
-            setTimeout(function () {
-                replaceById("text", parse(selectedResponse.response), 0, player.locationNext);
-            }, fadeTime);
-
-            if (
-                typeof selectedResponse.response === "string" &&
-                selectedResponse.response !== ""
-            ) {
-                responseMsgFound = true;
-            }
-        }
-    }
-
-    // Run consequences of choice
-    if (c !== "start") {
-        /* Every item in the consequences list is an object with a type,
-        obj and amnt, and sometimes feedback. */
-        let changeArray = cList[c].consequences;
-        change(changeArray);
-    }
-
-    updateDebugStats();
-
-    /*
-    We don't want the code below to run if consequences have triggered a new
-    scene or location! The if-statement makes sure that the location is only
-    changed when we go from player.location inScene to another one. This is
-    necessary, because INSIDE a scene the location can also be changed through
-    the changeLoc consequence. After the changeLoc this code below will also
-    still run, thus entering a location twice (and thereby erasing the feedback
-    message) Apart from that: a consequence can also be that a new scene has
-    been triggered. Once that scene ends this code will again, run. So we have
-    to prevent entering the next location when either the location or scene has
-    been changed which is what scene.changeLoc is for.
-    */
-    if (
-        player.location !== player.locationNext && !sceneChanged &&
-        player.inScene
-    ) {
-
-        if (responseFound) {
-            let newChoices = selectedResponse.newChoices;
-            let choiceCount = newChoices.length;
-
-            if (choiceCount === 0 && responseMsgFound) {
-
-                // There are no follow-ups, but we want a "continue" button
-                let newLocName = player.locationNext;
-
-                addToButtonQueue(
-                    "Continue",
-                    newLocName,
-                    "changeLoc",
-                    newLocName
-                );
-
+            if (responseFound) {
+                // Print the response on screen
                 setTimeout(function () {
-                    createButtons();
+                    replaceById(
+                        "text",
+                        parse(selectedResponse.response),
+                        0,
+                        player.locationNext
+                    );
                 }, fadeTime);
 
-            } else {
+                if (
+                    typeof selectedResponse.response === "string" &&
+                    selectedResponse.response !== ""
+                ) {
+                    responseMsgFound = true;
+                }
 
-                // There are responses and follow-ups
-                newChoices.forEach(function (nextChoice) {
-                    if (cList[nextChoice].enabled) {
-                        addToButtonQueue(
-                            cList[nextChoice].choice,
-                            nextChoice,
-                            "advanceScene",
-                            nextChoice
-                        );
-                    }
-                });
+                let newChoices = selectedResponse.newChoices;
+                let choiceCount = newChoices.length;
+
+                if (choiceCount === 0 && responseMsgFound) {
+
+                    // There are no follow-ups, but we want a "continue" button
+                    let newLocName = player.locationNext;
+
+                    addToButtonQueue(
+                        "Continue",
+                        newLocName,
+                        "changeLoc",
+                        newLocName
+                    );
+
+                    setTimeout(function () {
+                        createButtons();
+                    }, fadeTime);
+
+                } else {
+
+                    // There are responses and follow-ups
+                    newChoices.forEach(function (nextChoice) {
+                        if (cList[nextChoice].enabled) {
+                            addToButtonQueue(
+                                cList[nextChoice].choice,
+                                nextChoice,
+                                "advanceScene",
+                                nextChoice
+                            );
+                        }
+                    });
+
+                    setTimeout(function () {
+                        createButtons();
+                    }, fadeTime);
+                }
 
                 setTimeout(function () {
-                    createButtons();
+                    fadeIn("text");
+                    fadeIn("choices");
                 }, fadeTime);
-            }
+            } else {
+                // No responses: go to location
+                let playerLocRef = LocationList.get(player.location);
 
-            setTimeout(function () {
-                fadeIn("text");
-                fadeIn("choices");
-            }, fadeTime);
-
-        } else {
-            // No responses: go to location
-            /*
-            setTimeout(function () {
-                fadeIn("container");
-            }, fadeTime);
-            */
-
-            let playerLocRef = LocationList.get(player.location);
-
-            if (playerLocRef.name === "In scene") {
-                requestLocChange(player.locationNext);
+                if (playerLocRef.name === "In scene") {
+                    requestLocChange(player.locationNext);
+                }
             }
         }
-
     }
 };
 
 const startScene = function (newCList) {
-
     player.setLocation("locScene");
     player.setInObject(false);
-
+    player.upEventID();
     cList = newCList;
-    sceneChanged = false;
-
     advanceScene("start");
-
 };
 
 export default "loaded";
 export {
-    sceneChanged,
-    recordSceneChange,
     disableChoice,
     startScene,
     advanceScene

@@ -35,7 +35,6 @@ import {
 import {parseLocation} from "./parse.js";
 import {
     disableChoice,
-    recordSceneChange,
     startScene
 } from "./scene.js";
 import {
@@ -48,7 +47,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "0.9.4";
+const VERSION = "1.0.0-rc";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -69,6 +68,7 @@ let player = {
     inObject: false,
     inScene: false,
     state: "normal",
+    eventID: 0,
     moveToMenu: function (objID) {
         player.locationPrev = player.location;
         player.location = objID;
@@ -92,6 +92,9 @@ let player = {
         } else {
             player.inObject = false;
         }
+    },
+    upEventID: function () {
+        player.eventID += 1;
     }
 };
 
@@ -99,6 +102,7 @@ const updateDebugStats = function () {
     if (soundMuted) {
         $("#soundInfo").html("muted");
     }
+    $("#playereventid").html(player.eventID);
     $("#playerlocation").html(player.location);
     $("#playerprevloc").html(player.locationPrev);
     $("#playernextloc").html(player.locationNext);
@@ -148,7 +152,6 @@ const requestLocChange = function (newLoc) {
                 let lastIndex = locationQueue.length -1;
                 if (locationQueue[lastIndex] !== newLoc) {
                     locationQueue.push(newLoc);
-                } else {
                 }
             } else {
                 locationQueue.push(newLoc);
@@ -168,6 +171,7 @@ const enterLocation = function () {
         3. If neither is the case: show location content */
 
     updateDebugStats();
+    player.upEventID();
     let newLoc = locationQueue[0];
     let newLocRef = LocationList.get(newLoc);
 
@@ -191,7 +195,7 @@ const enterLocation = function () {
     player.locationPrev = player.location;
     player.location = newLoc;
     player.inScene = false;
-    // set loc.visited to 'true'
+    // visit() increases loc.visited by 1
     newLocRef.visit();
 
     // 1 - Check if a cutscene needs to be played and if so: play it.
@@ -236,8 +240,10 @@ const enterLocation = function () {
     }
 
     // 3 - Display Location content
-    if (!sceneTriggered) {
-
+    if (sceneTriggered) {
+        // Get rid of any further requested location changes
+        locationQueue = [];
+    } else {
         /*
         parseLocation returns an array with this
         layout:
@@ -862,9 +868,6 @@ const change = function (changeArray) {
                 locRef instanceof Location
             ) {
                 requestLocChange(changeObj.loc);
-                /* recordSceneChange prevents the ending of a scene
-                from also triggering requestLocChange() */
-                recordSceneChange();
                 success = true;
             }
             break;
@@ -1072,10 +1075,6 @@ const change = function (changeArray) {
                 typeof changeObj.cutscene === "string"
             ) {
                 loadCutscene("story/scenes/" + changeObj.scene + ".json");
-                /*
-                A new cutscene will trigger a location change by ending. recordSceneChange prevents the old scene from finishing.
-                */
-                recordSceneChange();
                 success = true;
             }
             break;
@@ -1087,10 +1086,6 @@ const change = function (changeArray) {
                 typeof changeObj.scene === "string"
             ) {
                 loadScene("story/scenes/" + changeObj.scene + ".json");
-                /*
-                A new scene will trigger a location change by ending. recordSceneChange prevents the old scene from finishing.
-                */
-                recordSceneChange();
                 success = true;
             }
             break;

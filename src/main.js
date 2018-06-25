@@ -531,11 +531,11 @@ const startStory = function () {
 
     if (init.enableInventory) {
         // Clickable button
-        $("#inventoryBtn").on("click", function () {
+        $("#invBtn").removeClass("hide");
+        $("#invBtn").addClass("inv_off");
+        $("#invBtn").on("click", function () {
             openInventory();
         });
-    } else {
-        document.getElementById("inventoryBtn").style.display = "none";
     }
 
     if (init.debugStats) {

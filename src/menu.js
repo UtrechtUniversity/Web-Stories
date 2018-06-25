@@ -320,7 +320,7 @@ const hideMenu = function () {
         in the same spot as the inventory button) and will therefore relaunch
         the inventory. */
         setTimeout(function () {
-            $("#inventoryBtn").on("click", function () {
+            $("#invBtn").on("click", function () {
                 openInventory();
             });
         }, 200);
@@ -442,7 +442,7 @@ const openInventory = function () {
     let objRef = ObjList.get(objID);
 
     // Remove event handler for inventory button
-    $("#inventoryBtn").off();
+    $("#invBtn").off();
 
     if (menuLock) {
         delay = 250;

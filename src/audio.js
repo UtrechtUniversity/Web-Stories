@@ -48,11 +48,11 @@ const changePlayback = function () {
         // Fade in
         playback = "fading";
         prevAction = "fadein";
-        currentTrack.howl.volume(0);
-        currentTrack.howl.play();
-        currentTrack.howl.fade(0, 1, fadeTime);
+        nextTrack.howl.volume(0);
+        nextTrack.howl.play();
+        nextTrack.howl.fade(0, 1, fadeTime);
 
-        $("#soundInfo").text("playing " + currentTrack.filename);
+        $("#soundInfo").text("playing " + nextTrack.filename);
 
         setTimeout(function () {
             playback = "playing";
@@ -101,7 +101,7 @@ const changePlayback = function () {
         setTimeout(function () {
             prevTrack.howl.pause();
             playback = "playing";
-            $("#soundInfo").text("playing " + currentTrack.filename);
+            $("#soundInfo").text("playing " + nextTrack.filename);
         }, fadeTime);
 
     } else if (type === "update") {
@@ -276,6 +276,8 @@ const muteSound = function () {
     if (soundMuted) {
         // Unmute
         soundMuted = false;
+        nextTrack = currentTrack;
+
         if (currentTrack.filename !== "no_sound") {
             if (currentTrack.howl.state() === "loaded") {
                 requestPlaybackChange("fadein");

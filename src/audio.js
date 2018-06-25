@@ -125,7 +125,6 @@ const changePlayback = function () {
         }
 
         playbackQueue.splice(0, amntToRemove);
-        console.log("removed " + amntToRemove + " items from queue");
 
         if (playbackQueue.length > 0) {
             changePlayback();
@@ -137,8 +136,6 @@ const changePlayback = function () {
 const requestPlaybackChange = function (type) {
     // Add job to playbackQueue
     playbackQueue.push(type);
-    console.log("Added to playbackQueue. Job = " + type);
-    console.log("Items in queue: " + playbackQueue.length);
 
     if (playbackQueue.length === 1) {
         changePlayback();

@@ -28,6 +28,7 @@ import {
     addToButtonQueue,
     createButtons,
     hideMenu,
+    invActive,
     menuActive,
     menuTracker,
     openInventory
@@ -507,7 +508,7 @@ const startStory = function () {
 
         if (isSpacebar) {
             if (init.enableInventory) {
-                if (player.location === player.inventory.name) {
+                if (invActive) {
                     hideMenu();
                 } else {
                     openInventory();

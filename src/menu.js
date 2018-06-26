@@ -21,8 +21,8 @@ import {getObj, LocationList, Npc, NpcList, Obj, ObjList} from "./classes.js";
 //import $ from "../lib/jquery-3.3.1.min.js";
 
 let buttonQueue = [];
+let invActive = false;
 let menuActive = false;
-let menuPage = "none";
 let menuTitle = "none";
 let menuTracker = [];
 let menuTxtQueue = [];
@@ -271,7 +271,6 @@ const showMenu = function (objID) {
 
     menuActive = true;
     menuLock = true;
-    menuPage = "Interaction Menu";
     clearFeedback(false, true);
 
     // Show menu
@@ -311,7 +310,7 @@ const hideMenu = function () {
     // 200ms is the delay time for the animations in the stylesheet
     }, 200);
 
-    if (player.location === player.inventory.name) {
+    if (invActive) {
         /* Inventory is active and will be closed, so we need to re-add the
         click listener that was removed in openInventory().
         Timeout is necessary, because somehow a click that is registered
@@ -319,6 +318,7 @@ const hideMenu = function () {
         activates the freshly added click listener below (if the click was
         in the same spot as the inventory button) and will therefore relaunch
         the inventory. */
+        invActive = false;
         setTimeout(function () {
             $("#invBtn").on("click", function () {
                 openInventory();
@@ -338,7 +338,6 @@ const hideMenu = function () {
     }
 
     menuActive = false;
-    menuPage = "none";
     menuTracker = [];
 
     updateDebugStats();
@@ -440,6 +439,7 @@ const openInventory = function () {
     let delay;
     let objID = player.inventory.name;
     let objRef = ObjList.get(objID);
+    invActive = true;
 
     // Remove event handler for inventory button
     $("#invBtn").off();

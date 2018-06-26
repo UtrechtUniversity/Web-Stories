@@ -759,7 +759,7 @@ const checkConditions = function (condList, displayFeedback = true) {
                     // Both loc.visited & value need to be either true or false
                     if (
                         (objRef.getVisited() > 0 && value) ||
-                        (!objRef.getVisited() === 0 && !value)
+                        (objRef.getVisited() === 0 && !value)
                     ) {
                         checkArray.push(true);
                     } else {

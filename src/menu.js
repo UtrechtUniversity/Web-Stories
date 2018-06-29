@@ -647,6 +647,7 @@ export {
     openMenu,
     refreshMenu,
     menuActive,
+    invActive,
     hideMenu,
     useOnMode,
     useOnModeActive,

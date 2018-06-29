@@ -161,13 +161,14 @@ const advanceScene = function (c) {
                     fadeIn("text");
                     fadeIn("choices");
                 }, fadeTime);
-            } else {
-                // No responses: go to location
-                let playerLocRef = LocationList.get(player.location);
+            }
+        }
 
-                if (playerLocRef.name === "In scene") {
-                    requestLocChange(player.locationNext);
-                }
+        if (responseList.length < 1 || !responseFound) {
+            // No responses: go to location
+            let playerLocRef = LocationList.get(player.location);
+            if (playerLocRef.name === "In scene") {
+                requestLocChange(player.locationNext);
             }
         }
     }

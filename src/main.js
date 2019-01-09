@@ -656,8 +656,13 @@ const checkConditions = function (condList, displayFeedback = true) {
             }
 
             if (condObject.obj !== undefined) {
-                obj = getObj(condObject.obj);
-                objRef = obj.ref;
+                // check if it's an actual obj, or "player"
+                if (condObject.obj === "player") {
+                    objRef = player;
+                } else {
+                    obj = getObj(condObject.obj);
+                    objRef = obj.ref;
+                }
             }
 
             switch (type) {

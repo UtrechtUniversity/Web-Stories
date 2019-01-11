@@ -994,7 +994,7 @@ const change = function (changeArray) {
             }
             break;
 
-        case "changeStorySetting":
+        case "setStorySetting":
             // REQUIRED: storySetting, value
             if (settings[changeObj.storySetting] !== undefined) {
                 settings[changeObj.storySetting] = changeObj.value;
@@ -1055,6 +1055,19 @@ const change = function (changeArray) {
             ) {
                 npcRef.comfortLevel += changeObj.amount;
                 success = true;
+            }
+            break;
+
+        case "increaseStorySetting":
+            // REQUIRED: storySetting, value
+
+            if (
+                changeObj.amount !== undefined &&
+                typeof changeObj.amount === "number" &&
+                settings[changeObj.storySetting] !== undefined
+                ) {
+                    settings[changeObj.storySetting] += changeObj.amount;
+                    success = true;
             }
             break;
 

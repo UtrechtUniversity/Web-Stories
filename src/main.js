@@ -821,7 +821,6 @@ const change = function (changeArray) {
     /* This funcion handles all consequences
     Basic rule: every parameter should either be a string or an integer */
 
-    let success = false;
     let locRef;
     let npcRef;
     let objInfo;
@@ -831,6 +830,8 @@ const change = function (changeArray) {
     let i = 0;
 
     changeArray.forEach(function (changeObj) {
+        let success = false;
+
         switch (changeObj.type) {
 
         case "addScene":

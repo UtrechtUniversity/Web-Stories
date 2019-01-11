@@ -604,6 +604,35 @@ const directAction = function (obj) {
     }
 };
 
+const compare = function (value1, value2, type) {
+    let success = false;
+
+    if (
+        type === undefined ||
+        (type !== "equal" &&
+        type !== "larger" &&
+        type !== "smaller")
+    ) {
+        type = "equal";
+    }
+
+    if (type === "equal") {
+        if (value1 === value2) {
+            success = true;
+        }
+    } else if (type === "larger") {
+        if (value1 > value2) {
+            success = true;
+        }
+    } else if (type === "smaller") {
+        if (value1 < value2) {
+            success = true;
+        }
+    }
+
+    return success;
+};
+
 const checkConditions = function (condList, displayFeedback = true) {
     /* This function handles all conditions.
     condList is an array containing condObj's.
@@ -701,7 +730,13 @@ const checkConditions = function (condList, displayFeedback = true) {
                 break;
 
             case "npcComfortLevel":
-                if (objRef.comfortLevel >= value) {
+                success = compare(
+                    value,
+                    objRef.comfortLevel,
+                    condObject.compare
+                );
+
+                if (success) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
@@ -721,30 +756,11 @@ const checkConditions = function (condList, displayFeedback = true) {
                 break;
 
             case "storySetting":
-                success = false;
-
-                if (
-                    condObject.compare === undefined ||
-                    (condObject.compare !== "equal" &&
-                     condObject.compare !== "larger" &&
-                     condObject.compare !== "smaller")
-                ) {
-                    condObject.compare = "equal";
-                }
-
-                if (condObject.compare === "equal") {
-                    if (value === settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                } else if (condObject.compare === "larger") {
-                    if (value > settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                } else if (condObject.compare === "smaller") {
-                    if (value < settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                }
+                success = compare(
+                    value,
+                    settings[condObject.storySetting],
+                    condObject.compare
+                );
 
                 if (success) {
                     checkArray.push(true);

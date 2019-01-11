@@ -48,7 +48,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "1.0.0-rc";
+const VERSION = "1.0.0";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;

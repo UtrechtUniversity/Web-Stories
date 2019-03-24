@@ -261,6 +261,21 @@ ul, li{
     list-style-type: disc;
 }
 
+q, 
+blockquote {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+    display: block;
+    margin-left: 2rem;
+}
+
+button q, button blockquote {
+    margin-left: 0;
+}
+
+html[lang="fr"] q {
+  quotes: "\00ab" "\00bb";
+}
+
 .blur {
     filter: blur(2px);
 }

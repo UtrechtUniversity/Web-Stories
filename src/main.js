@@ -48,7 +48,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "1.0.0-rc";
+const VERSION = "1.0.0";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -604,6 +604,35 @@ const directAction = function (obj) {
     }
 };
 
+const compare = function (value1, value2, type) {
+    let success = false;
+
+    if (
+        type === undefined ||
+        (type !== "equal" &&
+        type !== "larger" &&
+        type !== "smaller")
+    ) {
+        type = "equal";
+    }
+
+    if (type === "equal") {
+        if (value1 === value2) {
+            success = true;
+        }
+    } else if (type === "larger") {
+        if (value1 > value2) {
+            success = true;
+        }
+    } else if (type === "smaller") {
+        if (value1 < value2) {
+            success = true;
+        }
+    }
+
+    return success;
+};
+
 const checkConditions = function (condList, displayFeedback = true) {
     /* This function handles all conditions.
     condList is an array containing condObj's.
@@ -656,8 +685,13 @@ const checkConditions = function (condList, displayFeedback = true) {
             }
 
             if (condObject.obj !== undefined) {
-                obj = getObj(condObject.obj);
-                objRef = obj.ref;
+                // check if it's an actual obj, or "player"
+                if (condObject.obj === "player") {
+                    objRef = player;
+                } else {
+                    obj = getObj(condObject.obj);
+                    objRef = obj.ref;
+                }
             }
 
             switch (type) {
@@ -696,7 +730,13 @@ const checkConditions = function (condList, displayFeedback = true) {
                 break;
 
             case "npcComfortLevel":
-                if (objRef.comfortLevel >= value) {
+                success = compare(
+                    value,
+                    objRef.comfortLevel,
+                    condObject.compare
+                );
+
+                if (success) {
                     checkArray.push(true);
                 } else {
                     checkArray.push(false);
@@ -716,30 +756,11 @@ const checkConditions = function (condList, displayFeedback = true) {
                 break;
 
             case "storySetting":
-                success = false;
-
-                if (
-                    condObject.compare === undefined ||
-                    (condObject.compare !== "equal" &&
-                     condObject.compare !== "larger" &&
-                     condObject.compare !== "smaller")
-                ) {
-                    condObject.compare = "equal";
-                }
-
-                if (condObject.compare === "equal") {
-                    if (value === settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                } else if (condObject.compare === "larger") {
-                    if (value > settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                } else if (condObject.compare === "smaller") {
-                    if (value < settings[condObject.storySetting]) {
-                        success = true;
-                    }
-                }
+                success = compare(
+                    value,
+                    settings[condObject.storySetting],
+                    condObject.compare
+                );
 
                 if (success) {
                     checkArray.push(true);
@@ -816,7 +837,6 @@ const change = function (changeArray) {
     /* This funcion handles all consequences
     Basic rule: every parameter should either be a string or an integer */
 
-    let success = false;
     let locRef;
     let npcRef;
     let objInfo;
@@ -826,6 +846,8 @@ const change = function (changeArray) {
     let i = 0;
 
     changeArray.forEach(function (changeObj) {
+        let success = false;
+
         switch (changeObj.type) {
 
         case "addScene":
@@ -972,7 +994,7 @@ const change = function (changeArray) {
             }
             break;
 
-        case "changeStorySetting":
+        case "setStorySetting":
             // REQUIRED: storySetting, value
             if (settings[changeObj.storySetting] !== undefined) {
                 settings[changeObj.storySetting] = changeObj.value;
@@ -1033,6 +1055,19 @@ const change = function (changeArray) {
             ) {
                 npcRef.comfortLevel += changeObj.amount;
                 success = true;
+            }
+            break;
+
+        case "increaseStorySetting":
+            // REQUIRED: storySetting, value
+
+            if (
+                changeObj.amount !== undefined &&
+                typeof changeObj.amount === "number" &&
+                settings[changeObj.storySetting] !== undefined
+                ) {
+                    settings[changeObj.storySetting] += changeObj.amount;
+                    success = true;
             }
             break;
 

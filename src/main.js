@@ -62,6 +62,11 @@ let storedVersion;
 let storedLoc;
 let storedMute;
 let startButtonLocked = false;
+// The action log keeps a list of all changes that occured in the game
+// through the change() function as a result of player interactions.
+// It's saved into localStorage and retrieved and reapplied whenever
+// a user wishes to continue with a previously started story.
+let actionLog = [];
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
 
@@ -124,6 +129,36 @@ const updateDebugStats = function () {
 const logError = function (msg) {
     console.log("ERROR: " + msg);
     $("#err").text("Program error - see console for details");
+};
+
+const logAction = function (changeObj) {
+    // This function adds an entry to actionLog
+    // And saves it to localStorage
+    if (changeObj.type !== "changeLoc" &&
+        changeObj.type !== "fadeOut" &&
+        changeObj.type !== "playsound" &&
+        changeObj.type !== "refresh" &&
+        changeObj.type !== "triggerCutscene" &&
+        changeObj.type !== "triggerScene")
+    {
+        actionLog.push(changeObj);
+
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem("actionLog", JSON.stringify(actionLog));
+            console.log("actionLog saved to localStorage");
+        }
+    }
+};
+
+const reinstateSession = function () {
+    // This function restores all actions from the
+    // actionLog that's stored in localStorage
+    if (typeof(Storage) !== "undefined") {
+        actionLog = JSON.parse(localStorage.getItem("actionLog"));
+
+        // Throw the entire array through the change function to perform all changes
+        change(actionLog);
+    }
 };
 
 const playCutscene = function (url) {
@@ -576,6 +611,7 @@ const startStory = function (startFresh) {
         startLoc = storedLoc;
         player.locationPrev = storedLoc;
         player.locationNext = storedLoc;
+        reinstateSession();
     } else {
         // New playthrough
         startLoc = init.startLocation;
@@ -584,10 +620,14 @@ const startStory = function (startFresh) {
     }
 
     if (typeof(Storage) !== "undefined") {
+        if (startFresh) {
+            // First clear out possible previous settings
+            localStorage.clear();
+        }
         // Store version number
-        localStorage.version = init.version;
+        localStorage.setItem("version", init.version);
         // Store sound setting
-        localStorage.muteSound = soundMuted;
+        localStorage.setItem("muteSound", soundMuted);
     }
 
     setTimeout(function () {
@@ -1107,6 +1147,7 @@ const change = function (changeArray) {
                 soundIndex = loadSound(url);
                 if (soundIndex >= 0) {
                     playSound(soundIndex);
+                    success = true;
                 }
             }
             break;
@@ -1160,7 +1201,11 @@ const change = function (changeArray) {
         ) {
             feedback[i] = changeObj.feedback;
             i += 1;
-        } else if (!success) {
+        }
+
+        if (success) {
+            logAction(changeObj);
+        } else {
             logError("consequence failed: " + changeObj.type);
         }
     });

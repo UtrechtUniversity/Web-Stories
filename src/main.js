@@ -1463,7 +1463,16 @@ $(document).ready(function () {
 
                                 if (!init.muteSound) {
                                     // We had to wait for this until initAudio was called
-                                    let startLocRef = LocationList.get(storedLoc);
+                                    let startLocRef;
+
+                                    if (storedLoc === "locScene") {
+                                        // Doesn't actually exist, so get next audio
+                                        let nextLoc = localStorage.getItem("playernextloc");
+                                        startLocRef = LocationList.get(nextLoc);
+                                    } else {
+                                        startLocRef = LocationList.get(storedLoc);
+                                    }
+
                                     if (startLocRef.locSnd !== "no_sound") {
                                         /*
                                         Retrieve audio object for this location from audio

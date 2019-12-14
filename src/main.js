@@ -145,7 +145,6 @@ const logAction = function (changeObj) {
 
         if (typeof(Storage) !== "undefined") {
             localStorage.setItem("actionLog", JSON.stringify(actionLog));
-            console.log("actionLog saved to localStorage");
         }
     }
 };
@@ -239,7 +238,6 @@ const enterLocation = function () {
     // Save location in local storage
     if (typeof(Storage) !== "undefined") {
         localStorage.setItem("playerlocation", newLoc);
-        console.log("location saved in local storage");
     }
 
     // visit() increases loc.visited by 1
@@ -405,6 +403,14 @@ const refreshLocation = function () {
     let locRef = LocationList.get(loc);
     let locContent = parseLocation(locRef.content);
     let compositHTML = "";
+
+    // visit() increases loc.visited by 1
+    // this is necessary so that fade ins of sections
+    // that weren't completed yet, won't result in
+    // errors. In enterLocation() they get wrapped in a
+    // div with id: delay_nr, but the refresh doesn't
+    // do this and shows it immediately without that div.
+    locRef.visit();
 
     locContent.forEach(function (section) {
         compositHTML += section.sectionHTML;

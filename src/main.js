@@ -61,6 +61,7 @@ let locationQueue = [];
 let storedVersion;
 let storedLoc;
 let storedMute;
+let startButtonLocked = false;
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
 
@@ -592,7 +593,7 @@ const startStory = function (startFresh) {
     setTimeout(function () {
         /*
         requestLocChange does a fadeOut & fadeIn of #text and #choices,
-        but since we want a nicer, slower fade out and in of the
+        but since we want a nicer, slower fade out and fade in of the
         title screen we have to do that on the entire #container.
         The fadeOut already happened after the click event.
         */
@@ -1282,7 +1283,10 @@ $(document).ready(function () {
                     except for the audio-related stuff that's necessary right
                     now.
                     */
-                    if (!init.devAutoStart) {
+                    if (!init.devAutoStart && !startButtonLocked) {
+                        // startButtonLocked prevents users from clicking both
+                        // the continue and restart buttons
+                        startButtonLocked = true;
                         waitUntilLoaded = setInterval(function () {
                             if (
                                 /* LocationList will wait with loading until
@@ -1292,20 +1296,29 @@ $(document).ready(function () {
                                 audioLoaded === "loaded"
                             ) {
                                 clearInterval(waitUntilLoaded);
-                                setAudioFadeTime(init.audioFadeTime);
+                                let preLoadAudio;
 
                                 if (init.muteSound) {
                                     // Need to do this before initAudio()
                                     muteSound();
-                                } else {
-                                    // Preload audio from the init.json array
-                                    if (
-                                        Array.isArray(init.preLoadAudio) &&
-                                        init.preLoadAudio.length > 0
-                                    ) {
-                                        initAudio(init.preloadAudio);
-                                    }
+                                }
 
+                                setAudioFadeTime(init.audioFadeTime);
+
+                                // Preload audio from the init.json array
+                                if (
+                                    Array.isArray(init.preLoadAudio) &&
+                                    init.preLoadAudio.length > 0 &&
+                                    !init.muteSound
+                                ) {
+                                    preLoadAudio = init.preLoadAudio;
+                                } else {
+                                    preLoadAudio = [];
+                                }
+
+                                initAudio(preLoadAudio);
+
+                                if (!init.muteSound) {
                                     // We had to wait for this until initAudio was called
                                     let startLocRef = LocationList.get(storedLoc);
                                     if (startLocRef.locSnd !== "no_sound") {
@@ -1324,8 +1337,9 @@ $(document).ready(function () {
                                         firstAudioTrack.howl.play();
                                     }
                                 }
+
                                 fadeOut("container", fadeTime);
-                                setTimeout(startStory(false), fadeTime);
+                                setTimeout(function () { startStory(false); }, fadeTime);
                             }
                         }, 100);
                     }
@@ -1350,7 +1364,10 @@ $(document).ready(function () {
                 except for the audio-related stuff that's necessary right
                 now.
                 */
-                if (!init.devAutoStart) {
+                if (!init.devAutoStart && !startButtonLocked) {
+                    // startButtonLocked prevents users from clicking both
+                    // the continue and restart buttons
+                    startButtonLocked = true;
                     waitUntilLoaded = setInterval(function () {
                         if (
                             /* LocationList will wait with loading until
@@ -1360,20 +1377,29 @@ $(document).ready(function () {
                             audioLoaded === "loaded"
                         ) {
                             clearInterval(waitUntilLoaded);
-                            setAudioFadeTime(init.audioFadeTime);
+                            let preLoadAudio;
 
                             if (init.muteSound) {
                                 // Need to do this before initAudio()
                                 muteSound();
-                            } else {
-                                // Preload audio from the init.json array
-                                if (
-                                    Array.isArray(init.preLoadAudio) &&
-                                    init.preLoadAudio.length > 0
-                                ) {
-                                    initAudio(init.preloadAudio);
-                                }
+                            }
 
+                            setAudioFadeTime(init.audioFadeTime);
+
+                            // Preload audio from the init.json array
+                            if (
+                                Array.isArray(init.preLoadAudio) &&
+                                init.preLoadAudio.length > 0 &&
+                                !init.muteSound
+                            ) {
+                                preLoadAudio = init.preLoadAudio;
+                            } else {
+                                preLoadAudio = [];
+                            }
+
+                            initAudio(preLoadAudio);
+
+                            if (!init.muteSound) {
                                 // We had to wait for this until initAudio was called
                                 let startLocRef = LocationList.get(init.startLocation);
                                 if (startLocRef.locSnd !== "no_sound") {
@@ -1392,8 +1418,9 @@ $(document).ready(function () {
                                     firstAudioTrack.howl.play();
                                 }
                             }
+
                             fadeOut("container", fadeTime);
-                            setTimeout(startStory(true), fadeTime);
+                            setTimeout(function () { startStory(true); }, fadeTime);
                         }
                     }, 100);
                 }

@@ -190,6 +190,10 @@ class Npc extends SuperObj {
         }
     }
 
+    spliceScene () {
+        this.sceneQueue.splice(0, 1);
+    }
+
     interact (index, directAction) {
 
         let interaction = this.interactions[index];
@@ -212,12 +216,20 @@ class Npc extends SuperObj {
                 be the case, because else the talk button woudn't have
                 shown up) */
                 if (this.sceneQueue.length > 0) {
+                    scene = this.sceneQueue[0];
+
                     /* Take the first scene in the queue at index 0 and
-                    remove it from queue */
-                    scene = this.sceneQueue.splice(0, 1);
+                    remove it from queue; we have to route this through
+                    change() so that it gets logged for savegames */
+                    change([
+                        {
+                            type: "sceneSplice",
+                            npc: this.name
+                        }
+                    ]);
 
                     // Load scene
-                    loadScene("story/scenes/" + scene + ".json");
+                    loadScene("story/scenes/" + scene + ".json", "start");
                 }
             } else {
 

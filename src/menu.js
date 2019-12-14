@@ -563,7 +563,7 @@ const createButtons = function () {
         } else if (type === "advanceScene") {
             $("#" + thisID).one("click", function () {
                 deactivateUseOnMode();
-                advanceScene(objID);
+                advanceScene(objID, false);
             });
         } else if (type === "hideMenu") {
             $("#" + thisID).one("click", function () {

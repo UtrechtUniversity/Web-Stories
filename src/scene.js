@@ -35,7 +35,7 @@ const disableChoice = function (c) {
     }
 };
 
-const advanceScene = function (c) {
+const advanceScene = function (c, reload) {
     /* This function runs every time a player clicks a button during a
     scene. c = the choice the player has just made. */
 
@@ -45,6 +45,11 @@ const advanceScene = function (c) {
     let selectedResponse;
     let thisEventID = player.eventID;
     updateDebugStats();
+
+    if (typeof(Storage) !== "undefined") {
+        // Save where we are
+        localStorage.setItem("scene", c);
+    }
 
     if (menuActive) {
         /*
@@ -62,9 +67,14 @@ const advanceScene = function (c) {
 
     /* CONSEQUENCES
     Every item in the consequences list is an object with a type,
-    obj and amnt, and sometimes feedback. */
-    let changeArray = cList[c].consequences;
-    change(changeArray);
+    obj and amnt, and sometimes feedback.
+    Don't run consequences if this particular choice has already
+    been displayed before. This is the case when a player stops
+    in the middle of a scene and continues their playthrough later */
+    if (!reload) {
+        let changeArray = cList[c].consequences;
+        change(changeArray);
+    }
 
     /* Consequences might have triggered a scene or location change!
     Do not proceed if any of that happened. Check is done by recording
@@ -174,12 +184,21 @@ const advanceScene = function (c) {
     }
 };
 
-const startScene = function (newCList) {
-    player.setLocation("locScene");
+const startScene = function (newCList, startChoice) {
+    let reloading = false;
+    if (startChoice !== "start") {
+        // Resuming a previous scene
+        reloading = true;
+    } else {
+        // Starting a new scene
+        player.setLocation("locScene");
+    }
+
     player.setInObject(false);
     player.upEventID();
     cList = newCList;
-    advanceScene("start");
+
+    advanceScene(startChoice, reloading);
 };
 
 export default "loaded";

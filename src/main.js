@@ -95,6 +95,15 @@ let player = {
         }
         player.locationPrev = player.location;
         player.location = newLocation;
+
+        if (newLocation === "locScene") {
+            // Save location in local storage
+            if (typeof(Storage) !== "undefined") {
+                localStorage.setItem("playerlocation", player.location);
+                localStorage.setItem("playerprevloc", player.locationPrev);
+                localStorage.setItem("playernextloc", player.locationNext);
+            }
+        }
     },
     setInObject: function (value) {
         if (value) {
@@ -158,7 +167,7 @@ const reinstateSession = function () {
 
             // Throw the entire array through the change function to perform all changes
             if (actionLog.length > 0) {
-                change(actionLog);
+                change(actionLog, false);
             }
         }
     }
@@ -172,9 +181,14 @@ const playCutscene = function (url) {
     });
 };
 
-const loadScene = function (url) {
+const loadScene = function (url, startChoice) {
     $.getJSON(url, function (choiceList) {
-        startScene(choiceList);
+        // log the url
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem("sceneURL", url);
+        }
+
+        startScene(choiceList, startChoice);
     }).fail(function () {
         logError("main.js/loadScene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
     });
@@ -257,11 +271,18 @@ const enterLocation = function () {
         sceneName = sceneList[j];
 
         if (newLocRef.cutscenes[sceneName]) {
-            // Deactivate this cutscene
-            newLocRef.cutscenes[sceneName] = false;
-
             // Play scene
             playCutscene("story/scenes/" + sceneName + ".json");
+
+            // Deactivate this cutscene
+            // Goes through change() for logging
+            change([
+                {
+                    type: "cutsceneDeactivate",
+                    loc: newLoc,
+                    scene: sceneName
+                }
+            ]);
 
             sceneTriggered = true;
         }
@@ -278,10 +299,17 @@ const enterLocation = function () {
 
         if (newLocRef.scenes[sceneName]) {
             // Deactivate this scene
-            newLocRef.scenes[sceneName] = false;
+            // Goes through change() for logging
+            change([
+                {
+                    type: "sceneDeactivate",
+                    loc: newLoc,
+                    scene: sceneName
+                }
+            ]);
 
             // Load scene
-            loadScene("story/scenes/" + sceneName + ".json");
+            loadScene("story/scenes/" + sceneName + ".json", "start");
 
             sceneTriggered = true;
         }
@@ -526,6 +554,9 @@ const initStory = function () {
 
 const startStory = function (startFresh) {
     let startLoc;
+    let scene;
+    let sceneChoice;
+    let playScene = false;
 
     // Make scene location object
     let thisLoc = new Location(
@@ -622,6 +653,15 @@ const startStory = function (startFresh) {
         player.locationPrev = storedLoc;
         player.locationNext = storedLoc;
         reinstateSession();
+        if (storedLoc === "locScene") {
+            // Player was in the middle of a scene, let's restore a bit more
+            player.location = localStorage.getItem("playerlocation");
+            player.locationPrev = localStorage.getItem("playerprevloc");
+            player.locationNext = localStorage.getItem("playernextloc");
+            scene = localStorage.getItem("sceneURL");
+            sceneChoice = localStorage.getItem("scene");
+            playScene = true;
+        }
     } else {
         // New playthrough
         startLoc = init.startLocation;
@@ -650,7 +690,12 @@ const startStory = function (startFresh) {
         fadeIn("container", slowerFadeTime);
     }, fadeTime);
 
-    requestLocChange(startLoc);
+    if (playScene) {
+        //resume scene
+        loadScene(scene, sceneChoice);
+    } else {
+        requestLocChange(startLoc);
+    }
 };
 
 const directAction = function (obj) {
@@ -909,7 +954,7 @@ const checkConditions = function (condList, displayFeedback = true) {
 
 };
 
-const change = function (changeArray) {
+const change = function (changeArray, showFeedback = true) {
     /* This funcion handles all consequences
     Basic rule: every parameter should either be a string or an integer */
 
@@ -1070,6 +1115,18 @@ const change = function (changeArray) {
             }
             break;
 
+        case "cutsceneDeactivate":
+            // REQUIRED: locID, scene
+            locRef = LocationList.get(changeObj.loc);
+            if (
+                locRef !== undefined &&
+                locRef.cutscenes[changeObj.scene] !== undefined
+            ) {
+                locRef.cutscenes[changeObj.scene] = false;
+                success = true;
+            }
+        break;
+
         case "setStorySetting":
             // REQUIRED: storySetting, value
             if (settings[changeObj.storySetting] !== undefined) {
@@ -1181,6 +1238,29 @@ const change = function (changeArray) {
             }
             break;
 
+        case "sceneDeactivate":
+            // REQUIRED: locID, scene
+            locRef = LocationList.get(changeObj.loc);
+            if (
+                locRef !== undefined &&
+                locRef.scenes[changeObj.scene] !== undefined
+            ) {
+                locRef.scenes[changeObj.scene] = false;
+                success = true;
+            }
+            break;
+
+        case "sceneSplice":
+            // REQUIRED: npc
+            // Splices the top scene of an npc
+            npcRef = NpcList.get(changeObj.npc);
+
+            if (npcRef instanceof Npc) {
+                npcRef.spliceScene();
+                success = true;
+            }
+            break;
+
         case "triggerCutscene":
             // REQUIRED: cutscene
             if (
@@ -1198,7 +1278,7 @@ const change = function (changeArray) {
                 changeObj.scene !== undefined &&
                 typeof changeObj.scene === "string"
             ) {
-                loadScene("story/scenes/" + changeObj.scene + ".json");
+                loadScene("story/scenes/" + changeObj.scene + ".json", "start");
                 success = true;
             }
             break;
@@ -1207,7 +1287,8 @@ const change = function (changeArray) {
         if (
             success &&
             changeObj.feedback !== undefined &&
-            typeof changeObj.feedback === "string"
+            typeof changeObj.feedback === "string" &&
+            showFeedback
         ) {
             feedback[i] = changeObj.feedback;
             i += 1;

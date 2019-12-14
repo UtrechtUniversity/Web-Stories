@@ -1125,7 +1125,7 @@ const change = function (changeArray, showFeedback = true) {
                 locRef.cutscenes[changeObj.scene] = false;
                 success = true;
             }
-        break;
+            break;
 
         case "setStorySetting":
             // REQUIRED: storySetting, value
@@ -1361,6 +1361,13 @@ $(document).ready(function () {
                     storedVersion = localStorage.getItem("version");
                     storedLoc = localStorage.getItem("playerlocation");
                     storedMute = localStorage.getItem("muteSound");
+
+                    if (storedMute === "false") {
+                        // Convert from string (in web storage) to boolean
+                        storedMute = false;
+                    } else {
+                        storedMute = true;
+                    }
 
                     if (storedVersion === init.version) {
                         resumePossible = true;

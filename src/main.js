@@ -48,7 +48,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "1.1.0-alpha";
+const VERSION = "1.1.0-beta1";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -1269,8 +1269,8 @@ $(document).ready(function () {
             // First check if web storage is available
             if (typeof(Storage) !== undefined) {
                 if (localStorage.getItem("version") !== undefined && localStorage.getItem("playerlocation") !== undefined) {
-                    console.log("stored version is " + localStorage.getItem("version"));
-                    console.log("stored playerlocation is " + localStorage.getItem("playerlocation"));
+                    console.log("Stored version is " + localStorage.getItem("version"));
+                    console.log("Stored playerlocation is " + localStorage.getItem("playerlocation"));
                     // Check compatibility of the version that was used to
                     // save the progress vs. the current version of the story
                     storedVersion = localStorage.getItem("version");

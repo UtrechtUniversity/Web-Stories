@@ -153,10 +153,14 @@ const reinstateSession = function () {
     // This function restores all actions from the
     // actionLog that's stored in localStorage
     if (typeof(Storage) !== "undefined") {
-        actionLog = JSON.parse(localStorage.getItem("actionLog"));
+        if (typeof localStorage.getItem("actionLog") === "string") {
+            actionLog = JSON.parse(localStorage.getItem("actionLog"));
 
-        // Throw the entire array through the change function to perform all changes
-        change(actionLog);
+            // Throw the entire array through the change function to perform all changes
+            if (actionLog.length > 0) {
+                change(actionLog);
+            }
+        }
     }
 };
 

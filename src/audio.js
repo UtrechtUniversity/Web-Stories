@@ -276,6 +276,12 @@ const muteSound = function () {
     if (soundMuted) {
         // Unmute
         soundMuted = false;
+
+        if (typeof(Storage) !== "undefined") {
+            // Save sound setting in local storage
+            localStorage.setItem("muteSound", false);
+        }
+
         nextTrack = currentTrack;
 
         if (currentTrack.filename !== "no_sound") {
@@ -289,15 +295,23 @@ const muteSound = function () {
             }
 
         }
+
         $("#soundBtn").removeClass("sound_off");
         $("#soundBtn").addClass("sound_on");
 
     } else {
         // Mute
         soundMuted = true;
+
+        if (typeof(Storage) !== "undefined") {
+            // Save sound setting in local storage
+            localStorage.setItem("muteSound", true);
+        }
+
         if (currentTrack.filename !== "no_sound") {
             requestPlaybackChange("fadeout");
         }
+
         $("#soundBtn").removeClass("sound_on");
         $("#soundBtn").addClass("sound_off");
     }

@@ -48,7 +48,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0-alpha";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -58,6 +58,9 @@ let init;
 let waitUntilLoaded;
 let firstAudioTrack;
 let locationQueue = [];
+let storedVersion;
+let storedLoc;
+let storedMute;
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
 
@@ -196,6 +199,13 @@ const enterLocation = function () {
     player.locationPrev = player.location;
     player.location = newLoc;
     player.inScene = false;
+
+    // Save location in local storage
+    if (typeof(Storage) !== "undefined") {
+        localStorage.setItem("playerlocation", newLoc);
+        console.log("location saved in local storage");
+    }
+
     // visit() increases loc.visited by 1
     newLocRef.visit();
 
@@ -468,7 +478,8 @@ const initStory = function () {
 
 };
 
-const startStory = function () {
+const startStory = function (startFresh) {
+    let startLoc;
 
     // Make scene location object
     let thisLoc = new Location(
@@ -480,10 +491,6 @@ const startStory = function () {
         {},
         {}
     );
-
-    let startLoc = init.startLocation;
-    player.locationPrev = startLoc;
-    player.locationNext = startLoc;
 
     // Add key listener for Escape key & Spacebar
     document.onkeydown = function (evt) {
@@ -553,7 +560,6 @@ const startStory = function () {
         $("#fsBtn").click(toggleFullscreen);
     }
 
-
     document.getElementById("storyTitle").style.display = "none";
     document.querySelector("header").style.opacity = 1;
 
@@ -563,6 +569,25 @@ const startStory = function () {
     setFadeTime(init.fadeTime);
     setFeedbackTime(init.feedbackTime);
     let slowerFadeTime = fadeTime * 2;
+
+    if (!startFresh && storedLoc !== undefined) {
+        // Reload all settings from saved progess
+        startLoc = storedLoc;
+        player.locationPrev = storedLoc;
+        player.locationNext = storedLoc;
+    } else {
+        // New playthrough
+        startLoc = init.startLocation;
+        player.locationPrev = startLoc;
+        player.locationNext = startLoc;
+    }
+
+    if (typeof(Storage) !== "undefined") {
+        // Store version number
+        localStorage.version = init.version;
+        // Store sound setting
+        localStorage.muteSound = soundMuted;
+    }
 
     setTimeout(function () {
         /*
@@ -1169,18 +1194,16 @@ const devAutoStart = function () {
             if (
                 Array.isArray(init.preLoadAudio) && init.preLoadAudio.length > 0
             ) {
-                preLoadAudio = init.preLoadAudio;
-            } else {
-                preLoadAudio = [];
+                initAudio(init.preloadAudio);
             }
-            initAudio(init.preloadAudio);
 
-            startStory();
+            startStory(true);
         }
     }, 100);
 };
 
 $(document).ready(function () {
+    let resumePossible = false;
 
     console.log("This story is powered by Nightswim " + VERSION);
     initStory();
@@ -1189,6 +1212,36 @@ $(document).ready(function () {
         if (initLoaded && audioLoaded === "loaded") {
 
             clearInterval(waitUntilLoaded);
+
+            // Check for saved progress
+            // First check if web storage is available
+            if (typeof(Storage) !== undefined) {
+                if (localStorage.getItem("version") !== undefined && localStorage.getItem("playerlocation") !== undefined) {
+                    console.log("stored version is " + localStorage.getItem("version"));
+                    console.log("stored playerlocation is " + localStorage.getItem("playerlocation"));
+                    // Check compatibility of the version that was used to
+                    // save the progress vs. the current version of the story
+                    storedVersion = localStorage.getItem("version");
+                    storedLoc = localStorage.getItem("playerlocation");
+                    storedMute = localStorage.getItem("muteSound");
+
+                    if (storedVersion === init.version) {
+                        resumePossible = true;
+                        // Recall the saved state of the sound mute button
+                        init.muteSound = storedMute;
+                    } else {
+                        // Check if the storedVersion is in init.compatibleVersions
+                        let i = 0;
+                        while (i < init.compatibleVersions.length) {
+                            if (storedVersion === init.compatibleVersions[i]) {
+                                resumePossible = true;
+                                init.muteSound = storedMute;
+                            }
+                            i += 1;
+                        }
+                    }
+                }
+            }
 
             if (init.muteSound) {
                 $("#playSound").text("Turn sound on");
@@ -1207,78 +1260,146 @@ $(document).ready(function () {
             if (init.devAutoStart) {
                 devAutoStart();
             }
+
+            if (resumePossible) {
+                // Show a button with "Continue with previous playthrough" and
+                // "Restart story"
+                $("#choices").append("<li><button id=\"continueButton\" class=\"std\">Continue previous playthrough</button></li>");
+                $("#choices").append("<li><button id=\"startButton\" class=\"std\">Restart the story</button></li>");
+
+                // Make the continue button clickable
+                $("#continueButton").one("click", function () {
+                    /*
+                    We start by triggering startStory(), but only after the objects
+                    and npc's and locations have finished loading.
+
+                    We need to call a play() command right here, or else Safari
+                    on iOS will not see this click as a user interaction that is
+                    permitted to enable audio playback.
+
+                    So while all scripts have already loaded before this point
+                    (through initStory), all the rest happens in startStory,
+                    except for the audio-related stuff that's necessary right
+                    now.
+                    */
+                    if (!init.devAutoStart) {
+                        waitUntilLoaded = setInterval(function () {
+                            if (
+                                /* LocationList will wait with loading until
+                                NpcList and ObjList have loaded */
+                                LocationListLoaded &&
+                                initLoaded &&
+                                audioLoaded === "loaded"
+                            ) {
+                                clearInterval(waitUntilLoaded);
+                                setAudioFadeTime(init.audioFadeTime);
+
+                                if (init.muteSound) {
+                                    // Need to do this before initAudio()
+                                    muteSound();
+                                } else {
+                                    // Preload audio from the init.json array
+                                    if (
+                                        Array.isArray(init.preLoadAudio) &&
+                                        init.preLoadAudio.length > 0
+                                    ) {
+                                        initAudio(init.preloadAudio);
+                                    }
+
+                                    // We had to wait for this until initAudio was called
+                                    let startLocRef = LocationList.get(storedLoc);
+                                    if (startLocRef.locSnd !== "no_sound") {
+                                        /*
+                                        Retrieve audio object for this location from audio
+                                        module. We have to start playback here, or else
+                                        Safari will not count clicking "Lets go" as a
+                                        user interaction that can start sound playback.
+                                        */
+                                        firstAudioTrack = getAudioTrack(startLocRef.locSnd);
+                                        setCurrentTrack(firstAudioTrack);
+                                        firstAudioTrack.howl.load();
+                                        console.log("Loading audiotrack: " +
+                                            firstAudioTrack.filename);
+                                        firstAudioTrack.howl.volume(1);
+                                        firstAudioTrack.howl.play();
+                                    }
+                                }
+                                fadeOut("container", fadeTime);
+                                setTimeout(startStory(false), fadeTime);
+                            }
+                        }, 100);
+                    }
+                });
+            } else {
+                // Show only the start button
+                $("#choices").append("<li><button id=\"startButton\" class=\"std\">Let's go!</button></li>");
+            }
+
+            // Make the (re)start button clickable
+            $("#startButton").one("click", function () {
+                /*
+                We start by triggering startStory(), but only after the objects
+                and npc's and locations have finished loading.
+
+                We need to call a play() command right here, or else Safari
+                on iOS will not see this click as a user interaction that is
+                permitted to enable audio playback.
+
+                So while all scripts have already loaded before this point
+                (through initStory), all the rest happens in startStory,
+                except for the audio-related stuff that's necessary right
+                now.
+                */
+                if (!init.devAutoStart) {
+                    waitUntilLoaded = setInterval(function () {
+                        if (
+                            /* LocationList will wait with loading until
+                            NpcList and ObjList have loaded */
+                            LocationListLoaded &&
+                            initLoaded &&
+                            audioLoaded === "loaded"
+                        ) {
+                            clearInterval(waitUntilLoaded);
+                            setAudioFadeTime(init.audioFadeTime);
+
+                            if (init.muteSound) {
+                                // Need to do this before initAudio()
+                                muteSound();
+                            } else {
+                                // Preload audio from the init.json array
+                                if (
+                                    Array.isArray(init.preLoadAudio) &&
+                                    init.preLoadAudio.length > 0
+                                ) {
+                                    initAudio(init.preloadAudio);
+                                }
+
+                                // We had to wait for this until initAudio was called
+                                let startLocRef = LocationList.get(init.startLocation);
+                                if (startLocRef.locSnd !== "no_sound") {
+                                    /*
+                                    Retrieve audio object for this location from audio
+                                    module. We have to start playback here, or else
+                                    Safari will not count clicking "Lets go" as a
+                                    user interaction that can start sound playback.
+                                    */
+                                    firstAudioTrack = getAudioTrack(startLocRef.locSnd);
+                                    setCurrentTrack(firstAudioTrack);
+                                    firstAudioTrack.howl.load();
+                                    console.log("Loading first audiotrack: " +
+                                        firstAudioTrack.filename);
+                                    firstAudioTrack.howl.volume(1);
+                                    firstAudioTrack.howl.play();
+                                }
+                            }
+                            fadeOut("container", fadeTime);
+                            setTimeout(startStory(true), fadeTime);
+                        }
+                    }, 100);
+                }
+            });
         }
     }, 100);
-
-    $("#startButton").one("click", function () {
-        /*
-        We start by triggering startStory(), but only after the objects
-        and npc's and locations have finished loading.
-
-        We need to call a play() command right here, or else Safari
-        on iOS will not see this click as a user interaction that is
-        permitted to enable audio playback.
-
-        So while all scripts have already loaded before this point
-        (through initStory), all the rest happens in startStory,
-        except for the audio-related stuff that's necessary right
-        now.
-        */
-        if (!init.devAutoStart) {
-            waitUntilLoaded = setInterval(function () {
-                if (
-                    /* LocationList will wait with loading until
-                    NpcList and ObjList have loaded */
-                    LocationListLoaded &&
-                    initLoaded &&
-                    audioLoaded === "loaded"
-                ) {
-                    clearInterval(waitUntilLoaded);
-                    let preLoadAudio;
-
-                    if (init.muteSound) {
-                        // Need to do this before initAudio()
-                        muteSound();
-                    }
-
-                    setAudioFadeTime(init.audioFadeTime);
-
-                    // Preload audio from the init.json array
-                    if (
-                        Array.isArray(init.preLoadAudio) &&
-                        init.preLoadAudio.length > 0
-                    ) {
-                        preLoadAudio = init.preLoadAudio;
-                    } else {
-                        preLoadAudio = [];
-                    }
-                    initAudio(init.preloadAudio);
-
-                    if (!init.muteSound) {
-                        // We had to wait for this until initAudio was called
-                        let startLocRef = LocationList.get(init.startLocation);
-                        if (startLocRef.locSnd !== "no_sound") {
-                            /*
-                            Retrieve audio object for this location from audio
-                            module. We have to start playback here, or else
-                            Safari will not count clicking "Lets go" as a
-                            user interaction that can start sound playback.
-                            */
-                            firstAudioTrack = getAudioTrack(startLocRef.locSnd);
-                            setCurrentTrack(firstAudioTrack);
-                            firstAudioTrack.howl.load();
-                            console.log("Loading first audiotrack: " +
-                            firstAudioTrack.filename);
-                            firstAudioTrack.howl.volume(1);
-                            firstAudioTrack.howl.play();
-                        }
-                    }
-                    fadeOut("container", fadeTime);
-                    setTimeout(startStory, fadeTime);
-                }
-            }, 100);
-        }
-    });
 });
 
 export default "Main Story Module";

@@ -118,7 +118,7 @@ const advanceScene = function (c, reload) {
                         "text",
                         parse(selectedResponse.response),
                         0,
-                        player.locationNext
+                        player.currentLoc
                     );
                 }, fadeTime);
 
@@ -135,7 +135,7 @@ const advanceScene = function (c, reload) {
                 if (choiceCount === 0 && responseMsgFound) {
 
                     // There are no follow-ups, but we want a "continue" button
-                    let newLocName = player.locationNext;
+                    let newLocName = player.currentLoc;
 
                     addToButtonQueue(
                         "Continue",
@@ -176,9 +176,9 @@ const advanceScene = function (c, reload) {
 
         if (responseList.length < 1 || !responseFound) {
             // No responses: go to location
-            let playerLocRef = LocationList.get(player.location);
+            let playerLocRef = LocationList.get(player.currentSpace);
             if (playerLocRef.name === "In scene") {
-                requestLocChange(player.locationNext);
+                requestLocChange(player.currentLoc);
             }
         }
     }

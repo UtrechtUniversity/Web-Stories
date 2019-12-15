@@ -344,14 +344,14 @@ const hideMenu = function () {
 
     /*
     Restore previous location, only if the menu
-    was opened by openMenu(), because then the player.location
+    was opened by openMenu(), because then the player.currentSpace
     is moved to the object, but don't do it when we are in a scene
     */
     if (player.inObject && !player.inScene) {
-        // Refresh in locationNext, so that we
+        // Refresh in currentLoc, so that we
         // don't accidentally refresh into
         // "locScene" or an object
-        player.leaveMenu(player.locationNext);
+        player.leaveMenu(player.currentLoc);
         updateDebugStats();
         refreshLocation();
 
@@ -526,7 +526,7 @@ const createButtons = function () {
         buttonID += 1;
 
         // Look up the intended class for the buttons
-        locRef = LocationList.get(player.locationNext);
+        locRef = LocationList.get(player.currentLoc);
         let locBtnClass = locRef.styling.buttonClass;
 
         if (

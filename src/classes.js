@@ -236,10 +236,10 @@ class Npc extends SuperObj {
                 if (!directAction) {
                     /* An interaction that wasn't triggered because of a
                     directAction was issued from the interaction menu.
-                    Therefore player.location will hold the name ID of the
+                    Therefore player.currentSpace will hold the name ID of the
                     object that was open in the menu when the player clicked
                     this object to interact with. */
-                    openMenu(player.location);
+                    openMenu(player.currentSpace);
                 }
 
                 addFeedback(interaction.feedback);
@@ -310,10 +310,10 @@ class Obj extends SuperObj {
 
         /* An interaction that wasn't triggered because of a
         directAction was issued from the interaction menu.
-        Therefore player.location will hold the name ID of the
+        Therefore player.currentSpace will hold the name ID of the
         object that was open in the menu when the player clicked
         this object to interact with. */
-        let newLocation = player.location;
+        let newLocation = player.currentSpace;
 
         if (directAction === undefined) {
             directAction = false;
@@ -392,7 +392,7 @@ class Obj extends SuperObj {
             case "putback":
                 // Change state to 'normal'
                 this.state = "normal";
-                this.loc = player.locationPrev;
+                this.loc = player.prevSpace;
                 interaction.type = "take";
                 interaction.button = "Take " + this.name;
                 // Remove from inventory

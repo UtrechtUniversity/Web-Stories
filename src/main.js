@@ -72,38 +72,38 @@ let Inventory = new Map();
 
 let player = {
     name: "player",
-    location: "none",
-    locationPrev: "none",
-    locationNext: "none",
+    currentLoc: "none",
+    currentSpace: "none",
+    prevSpace: "none",
     inObject: false,
     inScene: false,
     state: "normal",
     eventID: 0,
     moveToMenu: function (objID) {
-        player.locationPrev = player.location;
-        player.location = objID;
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = objID;
         player.inObject = true;
     },
     leaveMenu: function (newLocation) {
-        player.locationPrev = player.location;
-        player.location = newLocation;
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = newLocation;
         player.inObject = false;
     },
     setLocation: function (newLocation) {
-        if (player.location !== "locScene" && !player.inObject) {
-            // This will make sure that locationNext will always store
+        if (player.currentSpace !== "locScene" && !player.inObject) {
+            // This will make sure that currentLoc will always store
             // an actual location, and not an object's name or "locScene"
-            player.locationNext = player.location;
+            player.currentLoc = player.currentSpace;
         }
-        player.locationPrev = player.location;
-        player.location = newLocation;
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = newLocation;
 
         if (newLocation === "locScene") {
             // Save location in local storage
             if (typeof(Storage) !== "undefined") {
-                localStorage.setItem("playerlocation", player.location);
-                localStorage.setItem("playerprevloc", player.locationPrev);
-                localStorage.setItem("playernextloc", player.locationNext);
+                localStorage.setItem("playerCurrentSpace", player.currentSpace);
+                localStorage.setItem("playerPrevSpace", player.prevSpace);
+                localStorage.setItem("playerCurrentLoc", player.currentLoc);
             }
         }
     },
@@ -124,9 +124,9 @@ const updateDebugStats = function () {
         $("#soundInfo").html("muted");
     }
     $("#playereventid").html(player.eventID);
-    $("#playerlocation").html(player.location);
-    $("#playerprevloc").html(player.locationPrev);
-    $("#playernextloc").html(player.locationNext);
+    $("#playerCurrentSpace").html(player.currentSpace);
+    $("#playerPrevSpace").html(player.prevSpace);
+    $("#playerCurrentLoc").html(player.currentLoc);
     $("#inScene").html(player.inScene);
     $("#inObject").html(player.inObject);
     $("#menu_active").html(menuActive);
@@ -248,16 +248,16 @@ const enterLocation = function () {
     changeTrack(newLocRef.locSnd);
 
     if (newLocRef.name !== "In scene") {
-        player.locationNext = newLoc;
+        player.currentLoc = newLoc;
     }
 
-    player.locationPrev = player.location;
-    player.location = newLoc;
+    player.prevSpace = player.currentSpace;
+    player.currentSpace = newLoc;
     player.inScene = false;
 
     // Save location in local storage
     if (typeof(Storage) !== "undefined") {
-        localStorage.setItem("playerlocation", newLoc);
+        localStorage.setItem("playerCurrentSpace", newLoc);
     }
 
     // visit() increases loc.visited by 1
@@ -394,7 +394,7 @@ const enterLocation = function () {
                     during the timeout and if player didn't re-enter the same
                     location */
                     if (
-                        player.location === locBeforeTimeout &&
+                        player.currentSpace === locBeforeTimeout &&
                         visitCountBeforeTimeout === newLocRef.getVisited()
                     ) {
                         document.getElementById(
@@ -432,8 +432,10 @@ const enterLocation = function () {
 
 const refreshLocation = function () {
 
-    // We'll use player.locationNext
-    let loc = player.locationNext;
+    // We'll use player.currentLoc, which is the last
+    // actual location, since this function can
+    // also be called within an object
+    let loc = player.currentLoc;
     let locRef = LocationList.get(loc);
     let locContent = parseLocation(locRef.content);
     let compositHTML = "";
@@ -652,28 +654,28 @@ const startStory = function (startFresh) {
     if (!startFresh && storedLoc !== undefined) {
         // Reload all settings from saved progess
         startLoc = storedLoc;
-        player.locationPrev = storedLoc;
-        player.locationNext = storedLoc;
+        player.prevSpace = storedLoc;
+        player.currentLoc = storedLoc;
         reinstateSession();
         if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "false") {
             // Player was in the middle of a scene, let's restore a bit more
             // "false" is between quotes cause everything in localStorage is saved as a string
-            player.location = localStorage.getItem("playerlocation");
-            player.locationPrev = localStorage.getItem("playerprevloc");
-            player.locationNext = localStorage.getItem("playernextloc");
+            player.currentSpace = localStorage.getItem("playerCurrentSpace");
+            player.prevSpace = localStorage.getItem("playerPrevSpace");
+            player.currentLoc = localStorage.getItem("playerCurrentLoc");
             scene = localStorage.getItem("sceneURL");
             sceneChoice = localStorage.getItem("scene");
             playScene = true;
         } else if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "true") {
             // Player was in the middle of a cutscene
             // Set location to previous actual location
-            player.location = localStorage.getitem("playernextloc");
+            player.currentSpace = localStorage.getitem("playerCurrentLoc");
         }
     } else {
         // New playthrough
         startLoc = init.startLocation;
-        player.locationPrev = startLoc;
-        player.locationNext = startLoc;
+        player.prevSpace = startLoc;
+        player.currentLoc = startLoc;
     }
 
     if (typeof(Storage) !== "undefined") {
@@ -1362,13 +1364,13 @@ $(document).ready(function () {
             // Check for saved progress
             // First check if web storage is available
             if (typeof(Storage) !== undefined) {
-                if (localStorage.getItem("version") !== undefined && localStorage.getItem("playerlocation") !== undefined) {
+                if (localStorage.getItem("version") !== undefined && localStorage.getItem("playerCurrentSpace") !== undefined) {
                     console.log("Stored version is " + localStorage.getItem("version"));
-                    console.log("Stored playerlocation is " + localStorage.getItem("playerlocation"));
+                    console.log("Stored playerCurrentSpace is " + localStorage.getItem("playerCurrentSpace"));
                     // Check compatibility of the version that was used to
                     // save the progress vs. the current version of the story
                     storedVersion = localStorage.getItem("version");
-                    storedLoc = localStorage.getItem("playerlocation");
+                    storedLoc = localStorage.getItem("playerCurrentSpace");
                     storedMute = localStorage.getItem("muteSound");
 
                     if (storedMute === "false") {
@@ -1476,7 +1478,7 @@ $(document).ready(function () {
 
                                     if (storedLoc === "locScene") {
                                         // Doesn't actually exist, so get next audio
-                                        let nextLoc = localStorage.getItem("playernextloc");
+                                        let nextLoc = localStorage.getItem("playerCurrentLoc");
                                         startLocRef = LocationList.get(nextLoc);
                                     } else {
                                         startLocRef = LocationList.get(storedLoc);

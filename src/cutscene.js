@@ -37,7 +37,7 @@ const startCutscene = function (eventArray) {
         $("#choices").html("");
         fadeIn("text", 0);
         fadeIn("choices", 0);
-        changeContainerClass(player.locationNext);
+        changeContainerClass(player.currentLoc);
         triggerEvent(eventArray[0], eventArray);
     }, fadeTime);
 };
@@ -112,10 +112,10 @@ const triggerEvent = function (event, eventArray) {
                     localStorage.setItem("cutscene", "false");
                 }
 
-                let playerLocRef = LocationList.get(player.location);
+                let playerLocRef = LocationList.get(player.currentSpace);
 
                 if (playerLocRef.id === "locScene") {
-                    requestLocChange(player.locationNext);
+                    requestLocChange(player.currentLoc);
                 }
             }
         }, event.outAnim);

@@ -26,6 +26,10 @@ const startCutscene = function (eventArray) {
     player.setLocation("locScene");
     player.setInObject(false);
 
+    if(typeof(Storage) !== undefined) {
+        localStorage.setItem("cutscene", "true");
+    }
+
     // Wait for fadeOuts to end
     setTimeout(function () {
         // Lets start with an empty page
@@ -103,10 +107,14 @@ const triggerEvent = function (event, eventArray) {
                 let nextIndex = currentIndex + 1;
                 triggerEvent(eventArray[nextIndex], eventArray);
             } else {
-                // Last one: go to location
+                // Last one: set localStorage to false and go to location
+                if(typeof(Storage) !== undefined) {
+                    localStorage.setItem("cutscene", "false");
+                }
+
                 let playerLocRef = LocationList.get(player.location);
 
-                if (playerLocRef.name === "In scene") {
+                if (playerLocRef.id === "locScene") {
                     requestLocChange(player.locationNext);
                 }
             }

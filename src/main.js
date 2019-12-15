@@ -91,6 +91,8 @@ let player = {
     },
     setLocation: function (newLocation) {
         if (player.location !== "locScene" && !player.inObject) {
+            // This will make sure that locationNext will always store
+            // an actual location, and not an object's name or "locScene"
             player.locationNext = player.location;
         }
         player.locationPrev = player.location;
@@ -653,14 +655,19 @@ const startStory = function (startFresh) {
         player.locationPrev = storedLoc;
         player.locationNext = storedLoc;
         reinstateSession();
-        if (storedLoc === "locScene") {
+        if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "false") {
             // Player was in the middle of a scene, let's restore a bit more
+            // "false" is between quotes cause everything in localStorage is saved as a string
             player.location = localStorage.getItem("playerlocation");
             player.locationPrev = localStorage.getItem("playerprevloc");
             player.locationNext = localStorage.getItem("playernextloc");
             scene = localStorage.getItem("sceneURL");
             sceneChoice = localStorage.getItem("scene");
             playScene = true;
+        } else if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "true") {
+            // Player was in the middle of a cutscene
+            // Set location to previous actual location
+            player.location = localStorage.getitem("playernextloc");
         }
     } else {
         // New playthrough
@@ -678,6 +685,8 @@ const startStory = function (startFresh) {
         localStorage.setItem("version", init.version);
         // Store sound setting
         localStorage.setItem("muteSound", soundMuted);
+        // Set "cutscene" to false
+        localStorage.setItem("cutscene", "false");
     }
 
     setTimeout(function () {

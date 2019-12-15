@@ -251,8 +251,7 @@ const enterLocation = function () {
         player.currentLoc = newLoc;
     }
 
-    player.prevSpace = player.currentSpace;
-    player.currentSpace = newLoc;
+    player.setLocation(newLoc);
     player.inScene = false;
 
     // Save location in local storage

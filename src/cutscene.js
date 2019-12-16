@@ -3,7 +3,7 @@ import {LocationList} from "./classes.js";
 import {
     changeContainerClass, replaceById, fadeIn, fadeOut, fadeTime
 } from "./display.js";
-import {requestLocChange, player} from "./main.js";
+import {requestLocChange, cutscene, player} from "./main.js";
 
 const startCutscene = function (eventArray) {
 
@@ -107,14 +107,19 @@ const triggerEvent = function (event, eventArray) {
                 let nextIndex = currentIndex + 1;
                 triggerEvent(eventArray[nextIndex], eventArray);
             } else {
-                // Last one: set localStorage to false and go to location
+                // The entire cutscene ends here:
+                // 1. Set localStorage to false
                 if(typeof(Storage) !== undefined) {
                     localStorage.setItem("cutscene", "false");
                 }
 
+                // 2. Deactivate cutscene
+                cutscene.end();
+
+                // 3. Go to location
                 let playerLocRef = LocationList.get(player.currentSpace);
 
-                if (playerLocRef.id === "locScene") {
+                if (playerLocRef.name === "In scene") {
                     requestLocChange(player.currentLoc);
                 }
             }

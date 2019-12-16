@@ -59,7 +59,7 @@ let waitUntilLoaded;
 let firstAudioTrack;
 let locationQueue = [];
 let storedVersion;
-let storedLoc;
+let storedSpace;
 let storedMute;
 let startButtonLocked = false;
 // The action log keeps a list of all changes that occured in the game
@@ -69,8 +69,28 @@ let startButtonLocked = false;
 let actionLog = [];
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
-
+let cutscene = {
+    changeObj: {},
+    play: function (url) {
+        $.getJSON(url, function (eventArray) {
+            startCutscene(eventArray);
+        }).fail(function () {
+            logError("main.js/cutscene.play: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
+        });
+    },
+    end: function () {
+        change([cutscene.changeObj]);
+    }
+}
 let player = {
+    // There is a clear distinction between a SPACE and a LOCATION
+    // Locations are defined in locations.json, and define the different
+    // locations through which the player can navigate. SPACES include
+    // Locations, as well as Obj's, Npc's, and "locScene" whenever a player
+    // is in a scene. player.currentSpace can be Obj or Npc, as to keep track
+    // of what the user is seeing inside a menu.
+    // Anyway, player.currentLoc will always display an actual location, and
+    // player.currentSpace might not.
     name: "player",
     currentLoc: "none",
     currentSpace: "none",
@@ -84,21 +104,37 @@ let player = {
         player.currentSpace = objID;
         player.inObject = true;
     },
-    leaveMenu: function (newLocation) {
+    leaveMenu: function (newLoc) {
         player.prevSpace = player.currentSpace;
-        player.currentSpace = newLocation;
+        player.currentSpace = newLoc;
         player.inObject = false;
     },
-    setLocation: function (newLocation) {
+    setLocation: function (newLoc) {
+        /* Obsolete: delete?
         if (player.currentSpace !== "locScene" && !player.inObject) {
             // This will make sure that currentLoc will always store
             // an actual location, and not an object's name or "locScene"
             player.currentLoc = player.currentSpace;
         }
-        player.prevSpace = player.currentSpace;
-        player.currentSpace = newLocation;
+        */
 
-        if (newLocation === "locScene") {
+        let newLocRef = LocationList.get(newLoc);
+
+        // This will make sure that currentLoc will always store
+        // an actual location, and not an object's name or "locScene"
+        if (
+            newLocRef !== undefined &&
+            newLocRef instanceof Location &&
+            newLoc !== "locScene"
+        )
+        {
+            player.currentLoc = newLoc;
+        }
+
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = newLoc;
+
+        if (newLoc === "locScene") {
             // Save location in local storage
             if (typeof(Storage) !== "undefined") {
                 localStorage.setItem("playerCurrentSpace", player.currentSpace);
@@ -173,14 +209,6 @@ const reinstateSession = function () {
             }
         }
     }
-};
-
-const playCutscene = function (url) {
-    $.getJSON(url, function (eventArray) {
-        startCutscene(eventArray);
-    }).fail(function () {
-        logError("main.js/playCutscene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
-    });
 };
 
 const loadScene = function (url, startChoice) {
@@ -273,17 +301,14 @@ const enterLocation = function () {
 
         if (newLocRef.cutscenes[sceneName]) {
             // Play scene
-            playCutscene("story/scenes/" + sceneName + ".json");
+            cutscene.play("story/scenes/" + sceneName + ".json");
 
-            // Deactivate this cutscene
-            // Goes through change() for logging
-            change([
-                {
+            // Make changeObject that deactivates the scene when it ends:
+            cutscene.changeObj = {
                     type: "cutsceneDeactivate",
                     loc: newLoc,
                     scene: sceneName
-                }
-            ]);
+                };
 
             sceneTriggered = true;
         }
@@ -556,7 +581,6 @@ const initStory = function () {
 };
 
 const startStory = function (startFresh) {
-    let startLoc;
     let scene;
     let sceneChoice;
     let playScene = false;
@@ -650,31 +674,30 @@ const startStory = function (startFresh) {
     setFeedbackTime(init.feedbackTime);
     let slowerFadeTime = fadeTime * 2;
 
-    if (!startFresh && storedLoc !== undefined) {
+    if (!startFresh && storedSpace !== undefined) {
         // Reload all settings from saved progess
-        startLoc = storedLoc;
-        player.prevSpace = storedLoc;
-        player.currentLoc = storedLoc;
         reinstateSession();
-        if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "false") {
+        if (storedSpace === "locScene" && localStorage.getItem("cutscene") === "false") {
             // Player was in the middle of a scene, let's restore a bit more
             // "false" is between quotes cause everything in localStorage is saved as a string
+            player.currentLoc = localStorage.getItem("playerCurrentLoc");
             player.currentSpace = localStorage.getItem("playerCurrentSpace");
             player.prevSpace = localStorage.getItem("playerPrevSpace");
-            player.currentLoc = localStorage.getItem("playerCurrentLoc");
             scene = localStorage.getItem("sceneURL");
             sceneChoice = localStorage.getItem("scene");
             playScene = true;
-        } else if (storedLoc === "locScene" && localStorage.getItem("cutscene") === "true") {
+        } else if (storedSpace === "locScene" && localStorage.getItem("cutscene") === "true") {
             // Player was in the middle of a cutscene
             // Set location to previous actual location
-            player.currentSpace = localStorage.getitem("playerCurrentLoc");
+            player.currentLoc = localStorage.getItem("playerCurrentLoc");
+            player.currentSpace = localStorage.getItem("playerCurrentLoc");
+            player.prevSpace =  localStorage.getItem("playerPrevSpace");
+        } else {
+            player.setLocation(storedSpace);
         }
     } else {
         // New playthrough
-        startLoc = init.startLocation;
-        player.prevSpace = startLoc;
-        player.currentLoc = startLoc;
+        player.setLocation(init.startLocation);
     }
 
     if (typeof(Storage) !== "undefined") {
@@ -704,7 +727,7 @@ const startStory = function (startFresh) {
         //resume scene
         loadScene(scene, sceneChoice);
     } else {
-        requestLocChange(startLoc);
+        requestLocChange(player.currentLoc);
     }
 };
 
@@ -1369,7 +1392,7 @@ $(document).ready(function () {
                     // Check compatibility of the version that was used to
                     // save the progress vs. the current version of the story
                     storedVersion = localStorage.getItem("version");
-                    storedLoc = localStorage.getItem("playerCurrentSpace");
+                    storedSpace = localStorage.getItem("playerCurrentSpace");
                     storedMute = localStorage.getItem("muteSound");
 
                     if (storedMute === "false") {
@@ -1475,12 +1498,12 @@ $(document).ready(function () {
                                     // We had to wait for this until initAudio was called
                                     let startLocRef;
 
-                                    if (storedLoc === "locScene") {
+                                    if (storedSpace === "locScene") {
                                         // Doesn't actually exist, so get next audio
                                         let nextLoc = localStorage.getItem("playerCurrentLoc");
                                         startLocRef = LocationList.get(nextLoc);
                                     } else {
-                                        startLocRef = LocationList.get(storedLoc);
+                                        startLocRef = LocationList.get(storedSpace);
                                     }
 
                                     if (startLocRef.locSnd !== "no_sound") {
@@ -1593,6 +1616,7 @@ $(document).ready(function () {
 
 export default "Main Story Module";
 export {
+    cutscene,
     player,
     requestLocChange,
     refreshLocation,

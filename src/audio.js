@@ -24,35 +24,40 @@ let prevTrack = {
     filename: "no_sound",
     howl: null
 };
-let nextTrack = {
-    filename: "no_sound",
-    howl: null
-
-}
 let playback = "stopped";
 let prevAction = "none";
+let lockChange = false;
 let fadeTime = 1000;
 
 const changePlayback = function () {
-    // At this point there will only be 1 item in the queue
-    let type = playbackQueue[0];
+    // This function performs the actual changing of tracks
+    // It takes the last request from playbackQueue and performs it.
+    // playbackQueue only contains a list of types.
+    // ANY FURTHER CHANGES TO AUDIO ARE NOW LOCKED UNTIL THIS
+    // HAS FINISHED. Then any other requested changes in the queue
+    // will be discarded except the very last one.
+    lockChange = true;
+
+    let lastIndex = playbackQueue.length - 1;
+    let type = playbackQueue[lastIndex].type;
+    let newTrack = playbackQueue[lastIndex].newTrack;
     let thisFadeTime = fadeTime;
 
     if (
         playback === "stopped" &&
         prevAction !== "fadein" && (
         (type === "fadein") ||
-        (type === "crossfade" && prevTrack.filename === "no_sound")
+        (type === "playTrack" && prevTrack.filename === "no_sound")
         )
     ) {
         // Fade in
         playback = "fading";
         prevAction = "fadein";
-        nextTrack.howl.volume(0);
-        nextTrack.howl.play();
-        nextTrack.howl.fade(0, 1, fadeTime);
+        newTrack.howl.volume(0);
+        newTrack.howl.play();
+        newTrack.howl.fade(0, 1, fadeTime);
 
-        $("#soundInfo").text("playing " + nextTrack.filename);
+        $("#soundInfo").text("playing " + newTrack.filename);
 
         setTimeout(function () {
             playback = "playing";
@@ -81,27 +86,36 @@ const changePlayback = function () {
                 thisTrack.howl.pause();
                 playback = "stopped";
 
+                newTrack = {
+                    filename: "no_sound",
+                    howl: null
+                };
+
                 $("#soundInfo").text("playback paused");
             }, fadeTime);
         }
 
-    } else if (playback === "playing" && type === "crossfade") {
-        // Crossfade
+    } else if (
+            playback === "playing" &&
+            type === "playTrack" &&
+            newTrack !== currentTrack
+        ) {
+        // Crossfade, unless it's the same file
         playback = "fading";
         prevAction = "crossfade";
         $("#soundInfo").text("crossfading");
 
         if (!soundMuted) {
-            nextTrack.howl.play();
+            newTrack.howl.play();
         }
 
-        prevTrack.howl.fade(1, 0, fadeTime);
-        nextTrack.howl.fade(0, 1, fadeTime);
+        currentTrack.howl.fade(1, 0, fadeTime);
+        newTrack.howl.fade(0, 1, fadeTime);
 
         setTimeout(function () {
-            prevTrack.howl.pause();
+            currentTrack.howl.pause();
             playback = "playing";
-            $("#soundInfo").text("playing " + nextTrack.filename);
+            $("#soundInfo").text("playing " + newTrack.filename);
         }, fadeTime);
 
     } else if (type === "update") {
@@ -109,11 +123,13 @@ const changePlayback = function () {
         thisFadeTime = 0;
     }
 
-    currentTrack = nextTrack;
+    currentTrack = newTrack;
 
     // Wait for fades to end
     setTimeout(function () {
         // Job done
+        lockChange = false;
+
         let amnt = playbackQueue.length;
         let amntToRemove = 1;
 
@@ -133,31 +149,30 @@ const changePlayback = function () {
     }, thisFadeTime);
 };
 
-const requestPlaybackChange = function (type) {
-    // Add job to playbackQueue
-    playbackQueue.push(type);
+const requestPlaybackChange = function (request) {
+    /*
+    The request should look like this:
+        {
+            type:
+            newTrack:
+        }
+    */
 
-    if (playbackQueue.length === 1) {
+    // Add job to playbackQueue
+    playbackQueue.push(request);
+
+    // Only run changePlayback() when it's not locked!
+    if (!lockChange) {
         changePlayback();
     }
 };
 
-const playTrack = function (newTrack) {
-    // This function assumes the track has been loaded!
-
-    prevTrack = currentTrack;
-    nextTrack = newTrack;
-
-    $("#soundInfo").text("track changed: " + newTrack.filename);
-
-    if (!soundMuted) {
-        requestPlaybackChange("crossfade");
-    }
-
-};
-
 const changeTrack = function (newSnd) {
-    /* newSnd contains the filename from the
+    /*
+    This function adds requests for audio
+    track changes to the playbackQueue.
+
+    newSnd contains the filename from the
     soundfile as set in locations.js */
     if (newSnd !== currentTrack.filename) {
 
@@ -181,31 +196,42 @@ const changeTrack = function (newSnd) {
                 if (track.howl.state() === "unloaded") {
                     track.howl.load();
                     track.howl.once("load", function () {
-                        playTrack(track);
+                        requestPlaybackChange({
+                            type: "playTrack",
+                            newTrack: track
+                        });
                     });
                 } else if (track.howl.state() === "loading") {
                     track.howl.once("load", function () {
-                        playTrack(track);
+                        requestPlaybackChange({
+                            type: "playTrack",
+                            newTrack: track
+                        });
                     });
                 } else {
-                    playTrack(track);
+                    requestPlaybackChange({
+                        type: "playTrack",
+                        newTrack: track
+                    });
                 }
             } else if (found && soundMuted) {
                 // Only update currentTrack
                 nextTrack = allTracks[trackNr];
-                requestPlaybackChange("update");
+                requestPlaybackChange({
+                    type: "update",
+                    newTrack: null
+                });
             }
 
         } else {
             /* Just fade out current track if the new location
             has "no_sound", unless sound is muted */
-            nextTrack = {
-                filename: "no_sound",
-                howl: null
-            };
 
             if (!soundMuted) {
-                requestPlaybackChange("fadeout");
+                requestPlaybackChange({
+                    type: "fadeout",
+                    newTrack: null
+                });
             }
 
             updateDebugStats();

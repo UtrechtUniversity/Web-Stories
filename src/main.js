@@ -300,9 +300,6 @@ const enterLocation = function () {
         sceneName = sceneList[j];
 
         if (newLocRef.cutscenes[sceneName]) {
-            // Play scene
-            cutscene.play("story/scenes/" + sceneName + ".json");
-
             // Make changeObject that deactivates the scene when it ends:
             cutscene.changeObj = {
                     type: "cutsceneDeactivate",
@@ -311,35 +308,40 @@ const enterLocation = function () {
                 };
 
             sceneTriggered = true;
+
+            // Play scene
+            cutscene.play("story/scenes/" + sceneName + ".json");
         }
         j += 1;
     }
 
     /* 2 - Check every scene in the location object to see if any scene
     is set to 'true'. As soon as one is found: start it. */
-    sceneList = Object.keys(newLocRef.scenes);
-    j = 0;
+    if (!sceneTriggered) {
+        sceneList = Object.keys(newLocRef.scenes);
+        j = 0;
 
-    while (j < sceneList.length && !sceneTriggered) {
-        sceneName = sceneList[j];
+        while (j < sceneList.length && !sceneTriggered) {
+            sceneName = sceneList[j];
 
-        if (newLocRef.scenes[sceneName]) {
-            // Deactivate this scene
-            // Goes through change() for logging
-            change([
-                {
-                    type: "sceneDeactivate",
-                    loc: newLoc,
-                    scene: sceneName
-                }
-            ]);
+            if (newLocRef.scenes[sceneName]) {
+                // Deactivate this scene
+                // Goes through change() for logging
+                change([
+                    {
+                        type: "sceneDeactivate",
+                        loc: newLoc,
+                        scene: sceneName
+                    }
+                ]);
 
-            // Load scene
-            loadScene("story/scenes/" + sceneName + ".json", "start");
+                // Load scene
+                loadScene("story/scenes/" + sceneName + ".json", "start");
 
-            sceneTriggered = true;
+                sceneTriggered = true;
+            }
+            j += 1;
         }
-        j += 1;
     }
 
     // 3 - Display Location content

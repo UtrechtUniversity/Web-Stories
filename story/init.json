@@ -1,4 +1,6 @@
 {
+    "version": "1.0",
+    "compatibleVersions": [],
     "audioFadeTime": 1000,
     "fadeTime": 250,
     "feedbackTime": 4000,

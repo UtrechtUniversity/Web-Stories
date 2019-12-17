@@ -3,7 +3,7 @@ import {LocationList} from "./classes.js";
 import {
     changeContainerClass, replaceById, fadeIn, fadeOut, fadeTime
 } from "./display.js";
-import {requestLocChange, player} from "./main.js";
+import {requestLocChange, cutscene, player} from "./main.js";
 
 const startCutscene = function (eventArray) {
 
@@ -26,6 +26,10 @@ const startCutscene = function (eventArray) {
     player.setLocation("locScene");
     player.setInObject(false);
 
+    if(typeof(Storage) !== undefined) {
+        localStorage.setItem("cutscene", "true");
+    }
+
     // Wait for fadeOuts to end
     setTimeout(function () {
         // Lets start with an empty page
@@ -33,7 +37,7 @@ const startCutscene = function (eventArray) {
         $("#choices").html("");
         fadeIn("text", 0);
         fadeIn("choices", 0);
-        changeContainerClass(player.locationNext);
+        changeContainerClass(player.currentLoc);
         triggerEvent(eventArray[0], eventArray);
     }, fadeTime);
 };
@@ -103,11 +107,20 @@ const triggerEvent = function (event, eventArray) {
                 let nextIndex = currentIndex + 1;
                 triggerEvent(eventArray[nextIndex], eventArray);
             } else {
-                // Last one: go to location
-                let playerLocRef = LocationList.get(player.location);
+                // The entire cutscene ends here:
+                // 1. Set localStorage to false
+                if(typeof(Storage) !== undefined) {
+                    localStorage.setItem("cutscene", "false");
+                }
+
+                // 2. Deactivate cutscene
+                cutscene.end();
+
+                // 3. Go to location
+                let playerLocRef = LocationList.get(player.currentSpace);
 
                 if (playerLocRef.name === "In scene") {
-                    requestLocChange(player.locationNext);
+                    requestLocChange(player.currentLoc);
                 }
             }
         }, event.outAnim);

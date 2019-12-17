@@ -48,7 +48,7 @@ import {
     LocationList
 } from "./classes.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.1.0-beta2";
 let settings = {};
 let ObjListLoaded = false;
 let NpcListLoaded = false;
@@ -58,34 +58,90 @@ let init;
 let waitUntilLoaded;
 let firstAudioTrack;
 let locationQueue = [];
+let storedVersion;
+let storedSpace;
+let storedMute;
+let startButtonLocked = false;
+// The action log keeps a list of all changes that occured in the game
+// through the change() function as a result of player interactions.
+// It's saved into localStorage and retrieved and reapplied whenever
+// a user wishes to continue with a previously started story.
+let actionLog = [];
 // Inventory Map: key=objID, value=show in inventory (true/false)
 let Inventory = new Map();
-
+let cutscene = {
+    changeObj: {},
+    play: function (url) {
+        $.getJSON(url, function (eventArray) {
+            startCutscene(eventArray);
+        }).fail(function () {
+            logError("main.js/cutscene.play: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
+        });
+    },
+    end: function () {
+        change([cutscene.changeObj]);
+    }
+}
 let player = {
+    // There is a clear distinction between a SPACE and a LOCATION
+    // Locations are defined in locations.json, and define the different
+    // locations through which the player can navigate. SPACES include
+    // Locations, as well as Obj's, Npc's, and "locScene" whenever a player
+    // is in a scene. player.currentSpace can be Obj or Npc, as to keep track
+    // of what the user is seeing inside a menu.
+    // Anyway, player.currentLoc will always display an actual location, and
+    // player.currentSpace might not.
     name: "player",
-    location: "none",
-    locationPrev: "none",
-    locationNext: "none",
+    currentLoc: "none",
+    currentSpace: "none",
+    prevSpace: "none",
     inObject: false,
     inScene: false,
     state: "normal",
     eventID: 0,
     moveToMenu: function (objID) {
-        player.locationPrev = player.location;
-        player.location = objID;
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = objID;
         player.inObject = true;
     },
-    leaveMenu: function (newLocation) {
-        player.locationPrev = player.location;
-        player.location = newLocation;
+    leaveMenu: function (newLoc) {
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = newLoc;
         player.inObject = false;
     },
-    setLocation: function (newLocation) {
-        if (player.location !== "locScene" && !player.inObject) {
-            player.locationNext = player.location;
+    setLocation: function (newLoc) {
+        /* Obsolete: delete?
+        if (player.currentSpace !== "locScene" && !player.inObject) {
+            // This will make sure that currentLoc will always store
+            // an actual location, and not an object's name or "locScene"
+            player.currentLoc = player.currentSpace;
         }
-        player.locationPrev = player.location;
-        player.location = newLocation;
+        */
+
+        let newLocRef = LocationList.get(newLoc);
+
+        // This will make sure that currentLoc will always store
+        // an actual location, and not an object's name or "locScene"
+        if (
+            newLocRef !== undefined &&
+            newLocRef instanceof Location &&
+            newLoc !== "locScene"
+        )
+        {
+            player.currentLoc = newLoc;
+        }
+
+        player.prevSpace = player.currentSpace;
+        player.currentSpace = newLoc;
+
+        if (newLoc === "locScene") {
+            // Save location in local storage
+            if (typeof(Storage) !== "undefined") {
+                localStorage.setItem("playerCurrentSpace", player.currentSpace);
+                localStorage.setItem("playerPrevSpace", player.prevSpace);
+                localStorage.setItem("playerCurrentLoc", player.currentLoc);
+            }
+        }
     },
     setInObject: function (value) {
         if (value) {
@@ -104,9 +160,9 @@ const updateDebugStats = function () {
         $("#soundInfo").html("muted");
     }
     $("#playereventid").html(player.eventID);
-    $("#playerlocation").html(player.location);
-    $("#playerprevloc").html(player.locationPrev);
-    $("#playernextloc").html(player.locationNext);
+    $("#playerCurrentSpace").html(player.currentSpace);
+    $("#playerPrevSpace").html(player.prevSpace);
+    $("#playerCurrentLoc").html(player.currentLoc);
     $("#inScene").html(player.inScene);
     $("#inObject").html(player.inObject);
     $("#menu_active").html(menuActive);
@@ -122,17 +178,47 @@ const logError = function (msg) {
     $("#err").text("Program error - see console for details");
 };
 
-const playCutscene = function (url) {
-    $.getJSON(url, function (eventArray) {
-        startCutscene(eventArray);
-    }).fail(function () {
-        logError("main.js/playCutscene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
-    });
+const logAction = function (changeObj) {
+    // This function adds an entry to actionLog
+    // And saves it to localStorage
+    if (changeObj.type !== "changeLoc" &&
+        changeObj.type !== "fadeOut" &&
+        changeObj.type !== "playsound" &&
+        changeObj.type !== "refresh" &&
+        changeObj.type !== "triggerCutscene" &&
+        changeObj.type !== "triggerScene")
+    {
+        actionLog.push(changeObj);
+
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem("actionLog", JSON.stringify(actionLog));
+        }
+    }
 };
 
-const loadScene = function (url) {
+const reinstateSession = function () {
+    // This function restores all actions from the
+    // actionLog that's stored in localStorage
+    if (typeof(Storage) !== "undefined") {
+        if (typeof localStorage.getItem("actionLog") === "string") {
+            actionLog = JSON.parse(localStorage.getItem("actionLog"));
+
+            // Throw the entire array through the change function to perform all changes
+            if (actionLog.length > 0) {
+                change(actionLog, false);
+            }
+        }
+    }
+};
+
+const loadScene = function (url, startChoice) {
     $.getJSON(url, function (choiceList) {
-        startScene(choiceList);
+        // log the url
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem("sceneURL", url);
+        }
+
+        startScene(choiceList, startChoice);
     }).fail(function () {
         logError("main.js/loadScene: scenefile not loaded: either the file doesn't exist, or there is a syntax-error in the file");
     });
@@ -190,12 +276,17 @@ const enterLocation = function () {
     changeTrack(newLocRef.locSnd);
 
     if (newLocRef.name !== "In scene") {
-        player.locationNext = newLoc;
+        player.currentLoc = newLoc;
     }
 
-    player.locationPrev = player.location;
-    player.location = newLoc;
+    player.setLocation(newLoc);
     player.inScene = false;
+
+    // Save location in local storage
+    if (typeof(Storage) !== "undefined") {
+        localStorage.setItem("playerCurrentSpace", newLoc);
+    }
+
     // visit() increases loc.visited by 1
     newLocRef.visit();
 
@@ -209,35 +300,48 @@ const enterLocation = function () {
         sceneName = sceneList[j];
 
         if (newLocRef.cutscenes[sceneName]) {
-            // Deactivate this cutscene
-            newLocRef.cutscenes[sceneName] = false;
-
-            // Play scene
-            playCutscene("story/scenes/" + sceneName + ".json");
+            // Make changeObject that deactivates the scene when it ends:
+            cutscene.changeObj = {
+                    type: "cutsceneDeactivate",
+                    loc: newLoc,
+                    scene: sceneName
+                };
 
             sceneTriggered = true;
+
+            // Play scene
+            cutscene.play("story/scenes/" + sceneName + ".json");
         }
         j += 1;
     }
 
     /* 2 - Check every scene in the location object to see if any scene
     is set to 'true'. As soon as one is found: start it. */
-    sceneList = Object.keys(newLocRef.scenes);
-    j = 0;
+    if (!sceneTriggered) {
+        sceneList = Object.keys(newLocRef.scenes);
+        j = 0;
 
-    while (j < sceneList.length && !sceneTriggered) {
-        sceneName = sceneList[j];
+        while (j < sceneList.length && !sceneTriggered) {
+            sceneName = sceneList[j];
 
-        if (newLocRef.scenes[sceneName]) {
-            // Deactivate this scene
-            newLocRef.scenes[sceneName] = false;
+            if (newLocRef.scenes[sceneName]) {
+                // Deactivate this scene
+                // Goes through change() for logging
+                change([
+                    {
+                        type: "sceneDeactivate",
+                        loc: newLoc,
+                        scene: sceneName
+                    }
+                ]);
 
-            // Load scene
-            loadScene("story/scenes/" + sceneName + ".json");
+                // Load scene
+                loadScene("story/scenes/" + sceneName + ".json", "start");
 
-            sceneTriggered = true;
+                sceneTriggered = true;
+            }
+            j += 1;
         }
-        j += 1;
     }
 
     // 3 - Display Location content
@@ -316,7 +420,7 @@ const enterLocation = function () {
                     during the timeout and if player didn't re-enter the same
                     location */
                     if (
-                        player.location === locBeforeTimeout &&
+                        player.currentSpace === locBeforeTimeout &&
                         visitCountBeforeTimeout === newLocRef.getVisited()
                     ) {
                         document.getElementById(
@@ -354,11 +458,21 @@ const enterLocation = function () {
 
 const refreshLocation = function () {
 
-    // We'll use player.locationNext
-    let loc = player.locationNext;
+    // We'll use player.currentLoc, which is the last
+    // actual location, since this function can
+    // also be called within an object
+    let loc = player.currentLoc;
     let locRef = LocationList.get(loc);
     let locContent = parseLocation(locRef.content);
     let compositHTML = "";
+
+    // visit() increases loc.visited by 1
+    // this is necessary so that fade ins of sections
+    // that weren't completed yet, won't result in
+    // errors. In enterLocation() they get wrapped in a
+    // div with id: delay_nr, but the refresh doesn't
+    // do this and shows it immediately without that div.
+    locRef.visit();
 
     locContent.forEach(function (section) {
         compositHTML += section.sectionHTML;
@@ -468,7 +582,10 @@ const initStory = function () {
 
 };
 
-const startStory = function () {
+const startStory = function (startFresh) {
+    let scene;
+    let sceneChoice;
+    let playScene = false;
 
     // Make scene location object
     let thisLoc = new Location(
@@ -480,10 +597,6 @@ const startStory = function () {
         {},
         {}
     );
-
-    let startLoc = init.startLocation;
-    player.locationPrev = startLoc;
-    player.locationNext = startLoc;
 
     // Add key listener for Escape key & Spacebar
     document.onkeydown = function (evt) {
@@ -553,7 +666,6 @@ const startStory = function () {
         $("#fsBtn").click(toggleFullscreen);
     }
 
-
     document.getElementById("storyTitle").style.display = "none";
     document.querySelector("header").style.opacity = 1;
 
@@ -564,17 +676,61 @@ const startStory = function () {
     setFeedbackTime(init.feedbackTime);
     let slowerFadeTime = fadeTime * 2;
 
+    if (!startFresh && storedSpace !== undefined) {
+        // Reload all settings from saved progess
+        reinstateSession();
+        if (storedSpace === "locScene" && localStorage.getItem("cutscene") === "false") {
+            // Player was in the middle of a scene, let's restore a bit more
+            // "false" is between quotes cause everything in localStorage is saved as a string
+            player.currentLoc = localStorage.getItem("playerCurrentLoc");
+            player.currentSpace = localStorage.getItem("playerCurrentSpace");
+            player.prevSpace = localStorage.getItem("playerPrevSpace");
+            scene = localStorage.getItem("sceneURL");
+            sceneChoice = localStorage.getItem("scene");
+            playScene = true;
+        } else if (storedSpace === "locScene" && localStorage.getItem("cutscene") === "true") {
+            // Player was in the middle of a cutscene
+            // Set location to previous actual location
+            player.currentLoc = localStorage.getItem("playerCurrentLoc");
+            player.currentSpace = localStorage.getItem("playerCurrentLoc");
+            player.prevSpace =  localStorage.getItem("playerPrevSpace");
+        } else {
+            player.setLocation(storedSpace);
+        }
+    } else {
+        // New playthrough
+        player.setLocation(init.startLocation);
+    }
+
+    if (typeof(Storage) !== "undefined") {
+        if (startFresh) {
+            // First clear out possible previous settings
+            localStorage.clear();
+        }
+        // Store version number
+        localStorage.setItem("version", init.version);
+        // Store sound setting
+        localStorage.setItem("muteSound", soundMuted);
+        // Set "cutscene" to false
+        localStorage.setItem("cutscene", "false");
+    }
+
     setTimeout(function () {
         /*
         requestLocChange does a fadeOut & fadeIn of #text and #choices,
-        but since we want a nicer, slower fade out and in of the
+        but since we want a nicer, slower fade out and fade in of the
         title screen we have to do that on the entire #container.
         The fadeOut already happened after the click event.
         */
         fadeIn("container", slowerFadeTime);
     }, fadeTime);
 
-    requestLocChange(startLoc);
+    if (playScene) {
+        //resume scene
+        loadScene(scene, sceneChoice);
+    } else {
+        requestLocChange(player.currentLoc);
+    }
 };
 
 const directAction = function (obj) {
@@ -833,7 +989,7 @@ const checkConditions = function (condList, displayFeedback = true) {
 
 };
 
-const change = function (changeArray) {
+const change = function (changeArray, showFeedback = true) {
     /* This funcion handles all consequences
     Basic rule: every parameter should either be a string or an integer */
 
@@ -994,6 +1150,18 @@ const change = function (changeArray) {
             }
             break;
 
+        case "cutsceneDeactivate":
+            // REQUIRED: locID, scene
+            locRef = LocationList.get(changeObj.loc);
+            if (
+                locRef !== undefined &&
+                locRef.cutscenes[changeObj.scene] !== undefined
+            ) {
+                locRef.cutscenes[changeObj.scene] = false;
+                success = true;
+            }
+            break;
+
         case "setStorySetting":
             // REQUIRED: storySetting, value
             if (settings[changeObj.storySetting] !== undefined) {
@@ -1081,6 +1249,7 @@ const change = function (changeArray) {
                 soundIndex = loadSound(url);
                 if (soundIndex >= 0) {
                     playSound(soundIndex);
+                    success = true;
                 }
             }
             break;
@@ -1104,6 +1273,29 @@ const change = function (changeArray) {
             }
             break;
 
+        case "sceneDeactivate":
+            // REQUIRED: locID, scene
+            locRef = LocationList.get(changeObj.loc);
+            if (
+                locRef !== undefined &&
+                locRef.scenes[changeObj.scene] !== undefined
+            ) {
+                locRef.scenes[changeObj.scene] = false;
+                success = true;
+            }
+            break;
+
+        case "sceneSplice":
+            // REQUIRED: npc
+            // Splices the top scene of an npc
+            npcRef = NpcList.get(changeObj.npc);
+
+            if (npcRef instanceof Npc) {
+                npcRef.spliceScene();
+                success = true;
+            }
+            break;
+
         case "triggerCutscene":
             // REQUIRED: cutscene
             if (
@@ -1121,7 +1313,7 @@ const change = function (changeArray) {
                 changeObj.scene !== undefined &&
                 typeof changeObj.scene === "string"
             ) {
-                loadScene("story/scenes/" + changeObj.scene + ".json");
+                loadScene("story/scenes/" + changeObj.scene + ".json", "start");
                 success = true;
             }
             break;
@@ -1130,11 +1322,16 @@ const change = function (changeArray) {
         if (
             success &&
             changeObj.feedback !== undefined &&
-            typeof changeObj.feedback === "string"
+            typeof changeObj.feedback === "string" &&
+            showFeedback
         ) {
             feedback[i] = changeObj.feedback;
             i += 1;
-        } else if (!success) {
+        }
+
+        if (success) {
+            logAction(changeObj);
+        } else {
             logError("consequence failed: " + changeObj.type);
         }
     });
@@ -1169,18 +1366,16 @@ const devAutoStart = function () {
             if (
                 Array.isArray(init.preLoadAudio) && init.preLoadAudio.length > 0
             ) {
-                preLoadAudio = init.preLoadAudio;
-            } else {
-                preLoadAudio = [];
+                initAudio(init.preloadAudio);
             }
-            initAudio(init.preloadAudio);
 
-            startStory();
+            startStory(true);
         }
     }, 100);
 };
 
 $(document).ready(function () {
+    let resumePossible = false;
 
     console.log("This story is powered by Nightswim " + VERSION);
     initStory();
@@ -1189,6 +1384,43 @@ $(document).ready(function () {
         if (initLoaded && audioLoaded === "loaded") {
 
             clearInterval(waitUntilLoaded);
+
+            // Check for saved progress
+            // First check if web storage is available
+            if (typeof(Storage) !== undefined) {
+                if (localStorage.getItem("version") !== undefined && localStorage.getItem("playerCurrentSpace") !== undefined) {
+                    console.log("Stored version is " + localStorage.getItem("version"));
+                    console.log("Stored playerCurrentSpace is " + localStorage.getItem("playerCurrentSpace"));
+                    // Check compatibility of the version that was used to
+                    // save the progress vs. the current version of the story
+                    storedVersion = localStorage.getItem("version");
+                    storedSpace = localStorage.getItem("playerCurrentSpace");
+                    storedMute = localStorage.getItem("muteSound");
+
+                    if (storedMute === "false") {
+                        // Convert from string (in web storage) to boolean
+                        storedMute = false;
+                    } else {
+                        storedMute = true;
+                    }
+
+                    if (storedVersion === init.version) {
+                        resumePossible = true;
+                        // Recall the saved state of the sound mute button
+                        init.muteSound = storedMute;
+                    } else {
+                        // Check if the storedVersion is in init.compatibleVersions
+                        let i = 0;
+                        while (i < init.compatibleVersions.length) {
+                            if (storedVersion === init.compatibleVersions[i]) {
+                                resumePossible = true;
+                                init.muteSound = storedMute;
+                            }
+                            i += 1;
+                        }
+                    }
+                }
+            }
 
             if (init.muteSound) {
                 $("#playSound").text("Turn sound on");
@@ -1207,82 +1439,186 @@ $(document).ready(function () {
             if (init.devAutoStart) {
                 devAutoStart();
             }
+
+            if (resumePossible) {
+                // Show a button with "Continue with previous playthrough" and
+                // "Restart story"
+                $("#choices").append("<li><button id=\"continueButton\" class=\"std\">Continue previous playthrough</button></li>");
+                $("#choices").append("<li><button id=\"startButton\" class=\"std\">Restart the story</button></li>");
+
+                // Make the continue button clickable
+                $("#continueButton").one("click", function () {
+                    /*
+                    We start by triggering startStory(), but only after the objects
+                    and npc's and locations have finished loading.
+
+                    We need to call a play() command right here, or else Safari
+                    on iOS will not see this click as a user interaction that is
+                    permitted to enable audio playback.
+
+                    So while all scripts have already loaded before this point
+                    (through initStory), all the rest happens in startStory,
+                    except for the audio-related stuff that's necessary right
+                    now.
+                    */
+                    if (!init.devAutoStart && !startButtonLocked) {
+                        // startButtonLocked prevents users from clicking both
+                        // the continue and restart buttons
+                        startButtonLocked = true;
+                        waitUntilLoaded = setInterval(function () {
+                            if (
+                                /* LocationList will wait with loading until
+                                NpcList and ObjList have loaded */
+                                LocationListLoaded &&
+                                initLoaded &&
+                                audioLoaded === "loaded"
+                            ) {
+                                clearInterval(waitUntilLoaded);
+                                let preLoadAudio;
+
+                                if (init.muteSound) {
+                                    // Need to do this before initAudio()
+                                    muteSound();
+                                }
+
+                                setAudioFadeTime(init.audioFadeTime);
+
+                                // Preload audio from the init.json array
+                                if (
+                                    Array.isArray(init.preLoadAudio) &&
+                                    init.preLoadAudio.length > 0 &&
+                                    !init.muteSound
+                                ) {
+                                    preLoadAudio = init.preLoadAudio;
+                                } else {
+                                    preLoadAudio = [];
+                                }
+
+                                initAudio(preLoadAudio);
+
+                                if (!init.muteSound) {
+                                    // We had to wait for this until initAudio was called
+                                    let startLocRef;
+
+                                    if (storedSpace === "locScene") {
+                                        // Doesn't actually exist, so get next audio
+                                        let nextLoc = localStorage.getItem("playerCurrentLoc");
+                                        startLocRef = LocationList.get(nextLoc);
+                                    } else {
+                                        startLocRef = LocationList.get(storedSpace);
+                                    }
+
+                                    if (startLocRef.locSnd !== "no_sound") {
+                                        /*
+                                        Retrieve audio object for this location from audio
+                                        module. We have to start playback here, or else
+                                        Safari will not count clicking "Lets go" as a
+                                        user interaction that can start sound playback.
+                                        */
+                                        firstAudioTrack = getAudioTrack(startLocRef.locSnd);
+                                        setCurrentTrack(firstAudioTrack);
+                                        firstAudioTrack.howl.load();
+                                        console.log("Loading audiotrack: " +
+                                            firstAudioTrack.filename);
+                                        firstAudioTrack.howl.volume(1);
+                                        firstAudioTrack.howl.play();
+                                    }
+                                }
+
+                                fadeOut("container", fadeTime);
+                                setTimeout(function () { startStory(false); }, fadeTime);
+                            }
+                        }, 100);
+                    }
+                });
+            } else {
+                // Show only the start button
+                $("#choices").append("<li><button id=\"startButton\" class=\"std\">Let's go!</button></li>");
+            }
+
+            // Make the (re)start button clickable
+            $("#startButton").one("click", function () {
+                /*
+                We start by triggering startStory(), but only after the objects
+                and npc's and locations have finished loading.
+
+                We need to call a play() command right here, or else Safari
+                on iOS will not see this click as a user interaction that is
+                permitted to enable audio playback.
+
+                So while all scripts have already loaded before this point
+                (through initStory), all the rest happens in startStory,
+                except for the audio-related stuff that's necessary right
+                now.
+                */
+                if (!init.devAutoStart && !startButtonLocked) {
+                    // startButtonLocked prevents users from clicking both
+                    // the continue and restart buttons
+                    startButtonLocked = true;
+                    waitUntilLoaded = setInterval(function () {
+                        if (
+                            /* LocationList will wait with loading until
+                            NpcList and ObjList have loaded */
+                            LocationListLoaded &&
+                            initLoaded &&
+                            audioLoaded === "loaded"
+                        ) {
+                            clearInterval(waitUntilLoaded);
+                            let preLoadAudio;
+
+                            if (init.muteSound) {
+                                // Need to do this before initAudio()
+                                muteSound();
+                            }
+
+                            setAudioFadeTime(init.audioFadeTime);
+
+                            // Preload audio from the init.json array
+                            if (
+                                Array.isArray(init.preLoadAudio) &&
+                                init.preLoadAudio.length > 0 &&
+                                !init.muteSound
+                            ) {
+                                preLoadAudio = init.preLoadAudio;
+                            } else {
+                                preLoadAudio = [];
+                            }
+
+                            initAudio(preLoadAudio);
+
+                            if (!init.muteSound) {
+                                // We had to wait for this until initAudio was called
+                                let startLocRef = LocationList.get(init.startLocation);
+                                if (startLocRef.locSnd !== "no_sound") {
+                                    /*
+                                    Retrieve audio object for this location from audio
+                                    module. We have to start playback here, or else
+                                    Safari will not count clicking "Lets go" as a
+                                    user interaction that can start sound playback.
+                                    */
+                                    firstAudioTrack = getAudioTrack(startLocRef.locSnd);
+                                    setCurrentTrack(firstAudioTrack);
+                                    firstAudioTrack.howl.load();
+                                    console.log("Loading first audiotrack: " +
+                                        firstAudioTrack.filename);
+                                    firstAudioTrack.howl.volume(1);
+                                    firstAudioTrack.howl.play();
+                                }
+                            }
+
+                            fadeOut("container", fadeTime);
+                            setTimeout(function () { startStory(true); }, fadeTime);
+                        }
+                    }, 100);
+                }
+            });
         }
     }, 100);
-
-    $("#startButton").one("click", function () {
-        /*
-        We start by triggering startStory(), but only after the objects
-        and npc's and locations have finished loading.
-
-        We need to call a play() command right here, or else Safari
-        on iOS will not see this click as a user interaction that is
-        permitted to enable audio playback.
-
-        So while all scripts have already loaded before this point
-        (through initStory), all the rest happens in startStory,
-        except for the audio-related stuff that's necessary right
-        now.
-        */
-        if (!init.devAutoStart) {
-            waitUntilLoaded = setInterval(function () {
-                if (
-                    /* LocationList will wait with loading until
-                    NpcList and ObjList have loaded */
-                    LocationListLoaded &&
-                    initLoaded &&
-                    audioLoaded === "loaded"
-                ) {
-                    clearInterval(waitUntilLoaded);
-                    let preLoadAudio;
-
-                    if (init.muteSound) {
-                        // Need to do this before initAudio()
-                        muteSound();
-                    }
-
-                    setAudioFadeTime(init.audioFadeTime);
-
-                    // Preload audio from the init.json array
-                    if (
-                        Array.isArray(init.preLoadAudio) &&
-                        init.preLoadAudio.length > 0
-                    ) {
-                        preLoadAudio = init.preLoadAudio;
-                    } else {
-                        preLoadAudio = [];
-                    }
-                    initAudio(init.preloadAudio);
-
-                    if (!init.muteSound) {
-                        // We had to wait for this until initAudio was called
-                        let startLocRef = LocationList.get(init.startLocation);
-                        if (startLocRef.locSnd !== "no_sound") {
-                            /*
-                            Retrieve audio object for this location from audio
-                            module. We have to start playback here, or else
-                            Safari will not count clicking "Lets go" as a
-                            user interaction that can start sound playback.
-                            */
-                            firstAudioTrack = getAudioTrack(startLocRef.locSnd);
-                            setCurrentTrack(firstAudioTrack);
-                            firstAudioTrack.howl.load();
-                            console.log("Loading first audiotrack: " +
-                            firstAudioTrack.filename);
-                            firstAudioTrack.howl.volume(1);
-                            firstAudioTrack.howl.play();
-                        }
-                    }
-                    fadeOut("container", fadeTime);
-                    setTimeout(startStory, fadeTime);
-                }
-            }, 100);
-        }
-    });
 });
 
 export default "Main Story Module";
 export {
+    cutscene,
     player,
     requestLocChange,
     refreshLocation,

@@ -1374,7 +1374,7 @@ const devAutoStart = function () {
     }, 100);
 };
 
-$(document).ready(function () {
+window.onload = function() {
     let resumePossible = false;
 
     console.log("This story is powered by Nightswim " + VERSION);
@@ -1617,7 +1617,7 @@ $(document).ready(function () {
             });
         }
     }, 100);
-});
+};
 
 export default "Main Story Module";
 export {

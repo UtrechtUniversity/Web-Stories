@@ -1,11 +1,11 @@
-# Nightswim
+# Web Stories
 
-Nightswim is a tool for creating interactive web applications.
+Web Stories is a tool for creating interactive web applications.
 It was originally intended for interactive stories and adventure games
-but is currently being adapted for more general purposes.
+but is being adapted for more general purposes.
 
 ## Dependencies
-Nightswim includes the following (unmodified) open source components:
+Web Stories includes the following (unmodified) open source components:
 - jQuery: MIT License
 - Howler.js: MIT License
 
